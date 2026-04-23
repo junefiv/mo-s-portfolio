@@ -119,7 +119,7 @@ export default function Navigation() {
               to="/"
               className="inline-block text-sm font-medium tracking-[0.2em] text-foreground transition-opacity hover:opacity-70"
             >
-              MO's PORTFOLIO
+              MORTFOLIO
             </Link>
           </div>
 
