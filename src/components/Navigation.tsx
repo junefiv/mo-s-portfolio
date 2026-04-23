@@ -116,7 +116,7 @@ export default function Navigation() {
           <div className="mb-3">
             <Link
               to="/"
-              className="inline-block text-sm font-medium tracking-[0.2em] text-foreground transition-opacity hover:opacity-70"
+              className="inline-block text-xl font-medium tracking-[0.1em] text-foreground transition-opacity hover:opacity-70"
             >
               Studio DeCho
             </Link>
