@@ -588,8 +588,6 @@ export default function Work() {
     <>
       <div className="pt-20 px-6">
         <div className="w-full min-w-0 max-w-page mx-auto py-20">
-          <h1 className="text-5xl md:text-7xl tracking-tight mb-16">WORK</h1>
-
           <div className="grid grid-cols-1 gap-12">
             {projects.map((project, index) => (
               <WorkProjectSet
