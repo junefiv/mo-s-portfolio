@@ -69,11 +69,7 @@ export default function News() {
   return (
     <main className="min-w-0 px-6 pt-20">
       <div className="mx-auto w-full min-w-0 max-w-page py-20">
-        <h1 className="mb-8 text-5xl tracking-tight md:text-7xl">NEWS</h1>
-        <p className="mb-12 max-w-2xl leading-relaxed text-muted-foreground">
-          전시·출판·강연·수상 등 최근 소식을 이곳에서 정리합니다. 상단 내비게이션에서 다른 섹션으로
-          이동할 수 있습니다.
-        </p>
+        
 
         <ul className="grid min-w-0 list-none grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-14">
           {sorted.map((item) => (
