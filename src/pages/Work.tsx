@@ -138,11 +138,11 @@ function WorkProjectSet({
                 aria-expanded={bodyOpen}
                 aria-controls={bodyId}
                 onClick={() => setBodyOpen((o) => !o)}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-all hover:bg-foreground/5 hover:text-foreground active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground/65 transition-colors duration-200 hover:bg-foreground/[0.06] hover:text-foreground active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/20"
                 aria-label={bodyOpen ? '상세 닫기' : '상세 열기'}
               >
                 <span
-                  className="text-lg font-light leading-none tabular-nums transition-opacity duration-200"
+                  className="text-3xl font-large leading-none tabular-nums"
                   aria-hidden
                 >
                   {bodyOpen ? '−' : '+'}

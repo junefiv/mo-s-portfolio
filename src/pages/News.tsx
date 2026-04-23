@@ -71,10 +71,10 @@ export default function News() {
       <div className="mx-auto w-full min-w-0 max-w-page py-20">
         
 
-        <ul className="grid min-w-0 list-none grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-14">
+        <ul className="grid min-w-0 list-none grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-5">
           {sorted.map((item) => (
             <li key={item.id} className="min-w-0">
-              <article className="flex min-w-0 flex-col gap-3">
+              <article className="flex min-w-0 flex-col gap-1.5">
                 <div className="aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-muted">
                   <img
                     src={item.image}
