@@ -9,80 +9,15 @@ const AUTO_INTERVAL_MS = 10_000
 /** 스크롤 멈춘 뒤 이만큼 유지 후 WORK 목록 페이드아웃 */
 const RAIL_IDLE_HIDE_MS = 3200
 
-/** 레일: 이미지 밝기(루멀) → 검 / 흰 / 회 (중간) */
-type RailContrast = 'light' | 'dark' | 'mid'
+/** WORK 우측 레일: 검은 글씨 + 흰 테두리(배경 색 자동 판별 없음) */
+const RAIL_TEXT_STROKE =
+  '[-webkit-text-stroke:0.45px_#fff] [paint-order:stroke_fill]'
 
-const RAIL_LUM_DARK = 0.45
-const RAIL_LUM_LIGHT = 0.55
-
-const imageLuminanceCache = new Map<string, number>()
-
-function getRailContrastFromLuminance(l: number): RailContrast {
-  if (l >= RAIL_LUM_LIGHT) return 'light'
-  if (l <= RAIL_LUM_DARK) return 'dark'
-  return 'mid'
-}
-
-function meanLuminanceFromImageData(d: ImageData) {
-  const { data } = d
-  let sum = 0
-  const n = data.length / 4
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i]! / 255
-    const g = data[i + 1]! / 255
-    const b = data[i + 2]! / 255
-    sum += 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-  return n > 0 ? sum / n : 0.5
-}
-
-function sampleImageLuminance(url: string): Promise<number> {
-  const hit = imageLuminanceCache.get(url)
-  if (hit !== undefined) return Promise.resolve(hit)
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      try {
-        const c = document.createElement('canvas')
-        const s = 32
-        c.width = s
-        c.height = s
-        const ctx = c.getContext('2d')
-        if (!ctx) {
-          resolve(0.5)
-          return
-        }
-        ctx.drawImage(img, 0, 0, s, s)
-        const d = ctx.getImageData(0, 0, s, s)
-        const L = meanLuminanceFromImageData(d)
-        imageLuminanceCache.set(url, L)
-        resolve(L)
-      } catch {
-        resolve(0.5)
-      }
-    }
-    img.onerror = () => resolve(0.5)
-    img.src = url
-  })
-}
-
-function railButtonClassName(isActive: boolean, contrast: RailContrast) {
-  const base =
-    'w-full min-w-0 text-right break-words transition-all duration-500 ease-in-out'
-  if (contrast === 'light') {
-    return isActive
-      ? `${base} shrink-0 text-sm text-neutral-950 md:text-base`
-      : `${base} shrink-0 text-xs text-neutral-950/45 hover:text-neutral-950/80`
-  }
-  if (contrast === 'dark') {
-    return isActive
-      ? `${base} shrink-0 text-sm text-white md:text-base`
-      : `${base} shrink-0 text-xs text-white/40 hover:text-white/75`
-  }
+function railButtonClassName(isActive: boolean) {
+  const base = `w-full min-w-0 text-right break-words font-semibold transition-all duration-500 ease-in-out text-neutral-950 ${RAIL_TEXT_STROKE}`
   return isActive
-    ? `${base} shrink-0 text-sm text-neutral-500 md:text-base`
-    : `${base} shrink-0 text-xs text-neutral-500/50 hover:text-neutral-500/90`
+    ? `${base} shrink-0 text-sm md:text-base`
+    : `${base} shrink-0 text-xs text-neutral-950/40 hover:text-neutral-950/85`
 }
 
 type WorkProject = {
@@ -229,7 +164,7 @@ function WorkProjectSet({
 export default function Work() {
   const [activeProject, setActiveProject] = useState(0)
   const [isScrolling, setIsScrolling] = useState(false)
-  const [railContrast, setRailContrast] = useState<RailContrast>('mid')
+  const [railHover, setRailHover] = useState(false)
   const projectRefs = useRef<(HTMLDivElement | null)[]>([])
   const railButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -557,32 +492,6 @@ export default function Work() {
       imagesRight: [0, 1, 2].map((s) => pics(p.no, 'R', s)),
     }))
 
-  const railSampleProject = projects[activeProject]
-  const railSampleKey = railSampleProject
-    ? `${railSampleProject.no}|${railSampleProject.imagesLeft[0] ?? ''}|${railSampleProject.imagesRight[0] ?? ''}`
-    : ''
-
-  useEffect(() => {
-    const p = projects[activeProject]
-    if (!p) return
-    let cancelled = false
-    const urls = [p.imagesLeft[0], p.imagesRight[0]].filter(
-      Boolean,
-    ) as string[]
-    if (urls.length === 0) {
-      setRailContrast('mid')
-      return
-    }
-    Promise.all(urls.map(sampleImageLuminance)).then((lums) => {
-      if (cancelled) return
-      const L = lums.reduce((a, b) => a + b, 0) / lums.length
-      setRailContrast(getRailContrastFromLuminance(L))
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [activeProject, railSampleKey])
-
   useEffect(() => {
     const handleWindowScroll = () => {
       scheduleRailHide()
@@ -622,6 +531,8 @@ export default function Work() {
     })
   }
 
+  const railVisible = isScrolling || railHover
+
   return (
     <div className="pt-20 px-6">
       <div className="w-full min-w-0 max-w-page mx-auto py-20 relative">
@@ -640,16 +551,15 @@ export default function Work() {
         </div>
 
         <div
+          onPointerEnter={() => setRailHover(true)}
+          onPointerLeave={() => setRailHover(false)}
           className={`fixed right-4 top-1/2 z-40 w-auto max-w-[min(12rem,45vw)] -translate-y-1/2 transition-opacity duration-700 ease-in-out md:right-6 md:max-w-xs ${
-            isScrolling ? 'opacity-100' : 'pointer-events-none opacity-0'
+            railVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
           <nav
             aria-label="WORK 프로젝트 목록"
-            onScroll={scheduleRailHide}
-            onWheel={scheduleRailHide}
-            onPointerDown={scheduleRailHide}
-            className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-colors duration-500 md:gap-2"
+            className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
           >
             {projects.map((project, index) => (
               <button
@@ -659,10 +569,7 @@ export default function Work() {
                 }}
                 type="button"
                 onClick={() => scrollToProject(index)}
-                className={railButtonClassName(
-                  activeProject === index,
-                  railContrast,
-                )}
+                className={railButtonClassName(activeProject === index)}
               >
                 {project.title}
               </button>
