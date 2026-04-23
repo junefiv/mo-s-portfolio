@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react'
 import { Link, useLocation } from 'react-router'
+import { SITE_TITLE } from '../siteMeta'
 
 /** 스크롤이 멈췄다고 판단하기 전 대기 (페이드와 겹치지 않게 넉넉히) */
 const SCROLL_SETTLE_MS = 400
@@ -118,7 +119,7 @@ export default function Navigation() {
               to="/"
               className="inline-block text-xl font-medium tracking-[0.1em] text-foreground transition-opacity hover:opacity-70"
             >
-              Studio DeCho
+              {SITE_TITLE}
             </Link>
           </div>
 
