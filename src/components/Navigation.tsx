@@ -34,8 +34,8 @@ export default function Navigation() {
   const [accOpen, setAccOpen] = useState(false)
 
   const links = [
-    { path: '/', label: 'NEWS' },
-    { path: '/work', label: 'WORK' },
+    { path: '/news', label: 'NEWS' },
+    { path: '/', label: 'WORK' },
     { path: '/fabrication', label: 'FABRICATION' },
     { path: '/info', label: 'INFO' },
   ]
@@ -95,7 +95,8 @@ export default function Navigation() {
   const isActive = (path: string) =>
     path === '/'
       ? location.pathname === '/'
-      : location.pathname.startsWith(path)
+      : location.pathname === path ||
+        location.pathname.startsWith(`${path}/`)
 
   return (
     <nav
@@ -117,7 +118,7 @@ export default function Navigation() {
           <div className="mb-3">
             <Link
               to="/"
-              className="inline-block text-xl font-medium tracking-[0.1em] text-foreground transition-opacity hover:opacity-70"
+              className="font-site-logo inline-block text-8xl font-bold tracking-[0em] text-foreground transition-opacity hover:opacity-70"
             >
               {SITE_TITLE}
             </Link>
@@ -134,7 +135,9 @@ export default function Navigation() {
             >
               {links.map((link) => (
                 <li key={`m-${link.path}`}>
-                  <span className="text-sm tracking-wide">{link.label}</span>
+                  <span className="font-nav-menu text-sm font-normal tracking-wide">
+                    {link.label}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -192,16 +195,16 @@ export default function Navigation() {
                             <Link
                               to={link.path}
                               onClick={() => setAccOpen(false)}
-                              className={`block w-full min-w-0 py-3 text-sm tracking-wide transition-all duration-500 ease-out ${
+                              className={`font-nav-menu block w-full min-w-0 py-3 text-sm tracking-wide transition-all duration-500 ease-out ${
                                 accOpen
                                   ? 'translate-y-0'
                                   : 'pointer-events-none -translate-y-1'
                               } ${
                                 accOpen
                                   ? active
-                                    ? 'opacity-100'
-                                    : 'opacity-40'
-                                  : 'opacity-0'
+                                    ? 'font-bold opacity-100'
+                                    : 'font-normal opacity-40'
+                                  : 'font-normal opacity-0'
                               }`}
                               style={{
                                 transitionDelay: accOpen
@@ -226,8 +229,10 @@ export default function Navigation() {
                     <li key={link.path}>
                       <Link
                         to={link.path}
-                        className={`text-sm tracking-wide transition-opacity hover:opacity-60 ${
-                          active ? 'opacity-100' : 'opacity-40'
+                        className={`font-nav-menu text-sm tracking-wide transition-opacity hover:opacity-60 ${
+                          active
+                            ? 'font-bold opacity-100'
+                            : 'font-normal opacity-40'
                         }`}
                       >
                         {link.label}

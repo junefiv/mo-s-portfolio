@@ -41,8 +41,8 @@ const ENTRIES: FabricationEntry[] = [
     institution: 'MIT Architecture',
     type: 'Workshop',
     paragraphs: [
-      '디지털 제조 파이프라인 전체를 다루는 집중 워크숍입니다. 파일 준비, CNC·레이저, 로봇 암 연동까지 실습 중심으로 진행됩니다.',
-      '산출물은 1:1 스케일 프로토타입과 제작 도면 패키지로 정리합니다.',
+      'This intensive, hands-on workshop is designed to immerse students comprehensively in the entire digital manufacturing pipeline. Through a series of rigorous practical modules, participants will navigate the complex journey from initial digital file preparation and geometry optimization to advanced machine operations, including multi-axis CNC milling, precision laser cutting, and the complex kinematic programming required for industrial robotic arm integration.',
+      'The culmination of the workshop requires students to synthesize these diverse skill sets into tangible outcomes. Deliverables consist of a fully realized, 1:1 scale physical prototype that demonstrates structural and aesthetic integrity, accompanied by a professional-grade, highly detailed fabrication drawing package that thoroughly documents the machine toolpaths and assembly logistics.'
     ],
     images: [
       fabPic('adf-2026', 0),
@@ -57,8 +57,8 @@ const ENTRIES: FabricationEntry[] = [
     institution: 'Harvard GSD',
     type: 'Studio',
     paragraphs: [
-      '파라메트릭 모델과 구조·환기 시뮬레이션을 연결해 설계–제작 루프를 단축하는 스튜디오입니다.',
-      '팀 단위로 스크립트 자산과 물리 프로토타입을 함께 제출합니다.',
+      'This advanced studio environment fundamentally challenges traditional architectural workflows by tightly integrating complex parametric modeling with real-time environmental and structural simulations. By directly linking computational fluid dynamics (CFD) for ventilation and finite element analysis (FEA) for structural performance with generative geometries, we actively shorten and optimize the iterative feedback loop between conceptual design and physical fabrication feasibility.',
+      'Operating entirely in collaborative, multidisciplinary teams, students are expected to develop robust, adaptable computational systems rather than static forms. The final studio submission mandates a dual deliverable: a comprehensive library of original algorithmic script assets alongside high-fidelity physical prototypes that validate the computational logic through physical material constraints.'
     ],
     images: [fabPic('cds-2025', 0), fabPic('cds-2025', 1)],
   },
@@ -69,7 +69,7 @@ const ENTRIES: FabricationEntry[] = [
     institution: 'Columbia GSAPP',
     type: 'Seminar',
     paragraphs: [
-      '재료의 가역·비가역 변형과 조립 논리를 세미나 형식으로 정리합니다. 각 세션마다 소규모 벤치 테스트가 따라붙습니다.',
+      'This theoretical and practical seminar deeply investigates the fundamental logic governing both the reversible and irreversible physical deformations of various raw materials under environmental stress. Through rigorous academic discourse and systematic categorization, we explore how specific material properties dictate potential tectonic assemblies and structural capabilities. To ground these theoretical frameworks, every seminar session is directly coupled with mandatory, small-scale physical bench tests, allowing students to empirically observe and document material behaviors in real-time.'
     ],
     images: [
       fabPic('ms-2025', 0),
@@ -85,12 +85,12 @@ const ENTRIES: FabricationEntry[] = [
     institution: 'ETH Zurich',
     type: 'Research',
     paragraphs: [
-      '현장 로봇과 프리패브 모듈의 인터페이스를 연구합니다. 안전 구역, 센서 피드백, 작업 순서 최적화에 초점을 둡니다.',
-      '파일럿 셀에서 수집한 사이클 타임 데이터로 워크플로를 재조정합니다.',
+      'This cutting-edge research initiative critically examines the complex physical and digital interfaces between autonomous on-site construction robots and standardized prefabricated architectural modules. The primary research directives heavily focus on developing robust dynamic safety zones for human-machine collaboration, engineering highly responsive real-time sensor feedback loops, and utilizing machine learning algorithms for the autonomous optimization of complex construction task sequencing.',
+      'To validate these digital methodologies, our team operates a dedicated physical pilot cell. By continuously monitoring and extracting high-resolution cycle time and error-rate data from these live automated assembly trials, we iteratively refine and profoundly readjust the overarching digital workflow, ensuring maximum efficiency and precision before scaling up to full-scale architectural deployment.'
     ],
     images: [fabPic('rc-2024', 0), fabPic('rc-2024', 1)],
   },
-]
+];
 
 export default function Fabrication() {
   const [openId, setOpenId] = useState<string | null>(null)

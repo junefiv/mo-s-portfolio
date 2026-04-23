@@ -11,46 +11,46 @@ const NEWS_ITEMS: NewsItem[] = [
   {
     id: 'n-6',
     date: '2026-04-18',
-    title: '서울 건축문화제 패널 토크',
-    body: '디지털 제작과 현장 시공의 간극을 줄이는 협업 사례를 중심으로 논의했습니다.',
+    title: 'Seoul Architecture Festival Panel Talk',
+    body: 'We participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digitWe participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digitWe participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digitWe participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digital designs into physical realities. The conversation highlighted innovative collaborative workflows and recent case studies that successfully bridge the historical gap between high-precision digital fabrication methods and the unpredictable variables of on-site construction.',
     image: 'https://picsum.photos/seed/news-n6/800/800',
   },
   {
     id: 'n-5',
     date: '2026-03-02',
-    title: '건축사협회지 인터뷰',
-    body: '연구실 운영과 교육 과제를 병행하는 방식, 그리고 학생 작업의 아카이빙 전략을 소개했습니다.',
+    title: 'Architects Institute Journal Interview',
+    body: 'We were recently featured in an in-depth interview with the Architects Institute Journal. The discussion explored our unique operational philosophy, specifically how we seamlessly integrate rigorous academic research lab management with ongoing educational curriculum demands. Furthermore, we shared our comprehensive strategies for systematically archiving and exhibiting student work to foster continuous knowledge transfer within the institution.',
     image: 'https://picsum.photos/seed/news-n5/800/800',
   },
   {
     id: 'n-4',
     date: '2025-11-20',
-    title: '국제 워크숍 “Material Loop”',
-    body: '재료 샘플 라이브러리와 LCA 워크시트를 묶어, 설계 단계에서 폐기물 경로를 시각화하는 실습을 진행했습니다.',
+    title: 'International Workshop "Material Loop"',
+    body: 'We hosted "Material Loop," a multi-day international workshop dedicated to circular economy principles in architecture. Participants engaged in hands-on sessions that paired our extensive physical material sample library with custom Life Cycle Assessment (LCA) computational worksheets. The core objective was to empower designers to proactively trace and visualize potential waste pathways and material life-spans from the very earliest stages of the schematic design process.',
     image: 'https://picsum.photos/seed/news-n4/800/800',
   },
   {
     id: 'n-3',
     date: '2025-08-07',
-    title: '갤러리 개인전 오프닝',
-    body: '최근 프로토타입 시리즈와 대형 프린트를 한 공간에 배치해, 제작 과정의 스케일 변화를 보여주었습니다.',
+    title: 'Gallery Solo Exhibition Opening',
+    body: 'We successfully launched the opening reception for our latest solo gallery exhibition. The curated spatial arrangement deliberately juxtaposed our recent series of highly detailed, small-scale physical prototypes alongside immersive, large-format architectural prints. This curated tension within the gallery space was designed to explicitly illustrate the drastic shifts in scale, resolution, and materiality that occur throughout our iterative digital production process.',
     image: 'https://picsum.photos/seed/news-n3/800/800',
   },
   {
     id: 'n-2',
     date: '2025-04-15',
-    title: '연구비 과제 킥오프',
-    body: '로보틱 조립 라인의 안전 인터록과 작업자 UI를 통합하는 3년 과제가 시작되었습니다.',
+    title: 'Research Grant Project Kick-off',
+    body: 'We are thrilled to announce the official kick-off of a major, fully funded three-year academic research grant. This ambitious project aims to fundamentally rethink human-machine collaboration on construction sites. Our primary focus will be engineering a robust, integrated system that seamlessly merges physical safety interlock mechanisms on large-scale robotic assembly lines with highly intuitive, augmented reality-based User Interfaces (UI) for on-site human operators.',
     image: 'https://picsum.photos/seed/news-n2/800/800',
   },
   {
     id: 'n-1',
     date: '2024-12-01',
-    title: '연말 오픈 스튜디오',
-    body: '진행 중인 모형·스크립트·영상 자료를 공개하고, 방문객과 피드백 세션을 열었습니다.',
+    title: 'Year-End Open Studio',
+    body: 'To close out the year, we transformed our workspace into a public forum for our annual Year-End Open Studio event. We opened our digital and physical archives, exhibiting a vast array of work-in-progress physical models, complex computational scripts, and immersive process videos. The event culminated in a vibrant, interactive feedback session, fostering invaluable dialogue between our core research team, industry professionals, and the general public.',
     image: 'https://picsum.photos/seed/news-n1/800/800',
   },
-]
+];
 
 function formatNewsDate(iso: string) {
   const d = new Date(`${iso}T12:00:00`)

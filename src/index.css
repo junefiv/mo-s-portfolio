@@ -6,16 +6,24 @@
 @custom-variant dark (&:is(.dark *));
 
 @font-face {
-  font-family: 'Godo';
-  src: url('/fonts/GodoM.otf') format('opentype');
+  font-family: 'Pyeojin Gothic';
+  src: url('/fonts/PyeojinGothic-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gowun Batang';
+  src: url('/fonts/GowunBatang-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Godo';
-  src: url('/fonts/GodoB.otf') format('opentype');
+  font-family: 'Gowun Batang';
+  src: url('/fonts/GowunBatang-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -117,9 +125,10 @@
   --breakpoint-xl: 80rem; /* 1280px */
   --breakpoint-2xl: 96rem; /* 1536px */
 
+  /* 고도(Godo) 대신 고운바탕 — `public/fonts/GowunBatang-*.ttf` */
   --font-sans:
-    'Godo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
+    'Gowun Batang', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Main column: all routes + nav content align to this */
   --max-w-page: 1070px;
@@ -167,6 +176,18 @@
 /* Tailwind v4 does not emit max-w-page from --max-w-page in @theme alone; register the utility. */
 @utility max-w-page {
   max-width: var(--max-w-page);
+}
+
+/** 네비 상단 사이트명 등 — `public/fonts/PyeojinGothic-Bold.otf` */
+@utility font-site-logo {
+  font-family:
+    'Pyeojin Gothic', 'Gowun Batang', ui-serif, Georgia, Cambria, serif;
+}
+
+/** 네비 메뉴 라벨 — `font-normal` / `font-bold` → Regular.ttf / Bold.ttf */
+@utility font-nav-menu {
+  font-family:
+    'Gowun Batang', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 }
 
 @layer base {

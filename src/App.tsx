@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react'
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import Navigation from './components/Navigation'
 import Fabrication from './pages/Fabrication'
 import News from './pages/News'
@@ -16,8 +16,9 @@ export default function App() {
     <div className="mx-auto min-h-screen w-full min-w-0 max-w-page">
       <Navigation />
       <Routes>
-        <Route path="/" element={<News />} />
-        <Route path="/work" element={<Work />} />
+        <Route path="/" element={<Work />} />
+        <Route path="/work" element={<Navigate to="/" replace />} />
+        <Route path="/news" element={<News />} />
         <Route path="/fabrication" element={<Fabrication />} />
         <Route path="/info" element={<Info />} />
       </Routes>
