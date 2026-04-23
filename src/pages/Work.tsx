@@ -166,6 +166,8 @@ export default function Work() {
   const [activeProject, setActiveProject] = useState(0)
   const [isScrolling, setIsScrolling] = useState(false)
   const [railHover, setRailHover] = useState(false)
+  /** 터치/드래그 중(모바일): hover가 없을 때 사라짐 방지 */
+  const [railPointerActive, setRailPointerActive] = useState(false)
   const projectRefs = useRef<(HTMLDivElement | null)[]>([])
   const railButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -519,6 +521,20 @@ export default function Work() {
     }
   }, [scheduleRailHide])
 
+  /** 터치 끝은 레일 밖에서 일어날 수 있어 window에서 해제 */
+  useEffect(() => {
+    if (!railPointerActive) return
+    const end = () => {
+      setRailPointerActive(false)
+    }
+    window.addEventListener('pointerup', end, { capture: true })
+    window.addEventListener('pointercancel', end, { capture: true })
+    return () => {
+      window.removeEventListener('pointerup', end, { capture: true })
+      window.removeEventListener('pointercancel', end, { capture: true })
+    }
+  }, [railPointerActive])
+
   /** 스크롤에 따라 active가 바뀌면, 고정 레일 안에서도 해당 버튼이 잘리지 않게 맞춤 */
   useEffect(() => {
     const el = railButtonRefs.current[activeProject]
@@ -532,19 +548,24 @@ export default function Work() {
     })
   }
 
-  const railVisible = isScrolling || railHover
+  const railVisible = isScrolling || railHover || railPointerActive
 
   const workProjectRail = (
     <div
       onPointerEnter={() => setRailHover(true)}
       onPointerLeave={() => setRailHover(false)}
+      onPointerDown={() => {
+        setRailPointerActive(true)
+        scheduleRailHide()
+      }}
       className={`fixed right-4 top-1/2 z-[200] w-auto max-w-[min(12rem,45vw)] -translate-y-1/2 transition-opacity duration-700 ease-in-out md:right-6 md:max-w-xs ${
         railVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
       <nav
         aria-label="WORK 프로젝트 목록"
-        className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
+        onScroll={scheduleRailHide}
+        className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] touch-pan-y flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
       >
         {projects.map((project, index) => (
           <button
