@@ -1,0 +1,23 @@
+---
+description: UI는 프로젝트 브레이크포인트·방향(가로/세로)에 맞춰 반응형으로 구현
+globs: "**/*.{tsx,jsx,css}"
+alwaysApply: true
+---
+
+# 반응형 UI (mo-s-portfolio)
+
+`src/index.css`의 `@theme inline`에 정의된 **min-width**를 기준으로 한다. **mobile-first**: 기본 클래스는 **모바일 세로(가장 작은 뷰)**용이고, 큰 뷰는 접두어를 쌓는다.
+
+| 접두어 | min-width | 의미 |
+|--------|-----------|------|
+| (없음) | 0 | 모바일 세로 |
+| `xs:` | 480px (30rem) | 큰 폰 / 좁은 가로 |
+| `sm:` | 640px (40rem) | 모바일 가로 |
+| `md:` | 768px (48rem) | 태블릿 세로 |
+| `lg:` | 1024px (64rem) | 태블릿 가로 |
+| `xl:` | 1280px (80rem) | 랩톱 |
+| `2xl:` | 1536px (96rem) | 데스크톱 |
+
+**가로/세로**가 너비만으로 부족할 때(레이아웃이 orientation에 민감할 때) `portrait:` / `landscape:` 를 **너비 접두어와 조합**한다. 예: `portrait:md:flex-row` `landscape:lg:grid-cols-2`
+
+규칙: 새 화면·컴포넌트는 **위 범위를 빠짐없이 고려**하고, 임의 `px`로 `@media`를 컴포넌트에 직접 쓰지 않는다(필요 시 `index.css`의 `@theme` / `@custom-variant`로 올린 뒤 유틸로 사용). 레이아웃은 `flex`/`grid`, `gap`, `max-w-*`, `min-w-0`로 오버플로를 방지한다.
