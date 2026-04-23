@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import WorkImageCarousel from '../components/WorkImageCarousel'
 
 const pics = (projectNo: number, col: 'L' | 'R', slot: number) =>
@@ -533,50 +534,55 @@ export default function Work() {
 
   const railVisible = isScrolling || railHover
 
-  return (
-    <div className="pt-20 px-6">
-      <div className="w-full min-w-0 max-w-page mx-auto py-20 relative">
-        <h1 className="text-5xl md:text-7xl tracking-tight mb-16">WORK</h1>
-
-        <div className="grid grid-cols-1 gap-12">
-          {projects.map((project, index) => (
-            <WorkProjectSet
-              key={project.no}
-              project={project}
-              onBlockRef={(el) => {
-                projectRefs.current[index] = el
-              }}
-            />
-          ))}
-        </div>
-
-        <div
-          onPointerEnter={() => setRailHover(true)}
-          onPointerLeave={() => setRailHover(false)}
-          className={`fixed right-4 top-1/2 z-40 w-auto max-w-[min(12rem,45vw)] -translate-y-1/2 transition-opacity duration-700 ease-in-out md:right-6 md:max-w-xs ${
-            railVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
-          }`}
-        >
-          <nav
-            aria-label="WORK 프로젝트 목록"
-            className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
+  const workProjectRail = (
+    <div
+      onPointerEnter={() => setRailHover(true)}
+      onPointerLeave={() => setRailHover(false)}
+      className={`fixed right-4 top-1/2 z-[200] w-auto max-w-[min(12rem,45vw)] -translate-y-1/2 transition-opacity duration-700 ease-in-out md:right-6 md:max-w-xs ${
+        railVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
+      <nav
+        aria-label="WORK 프로젝트 목록"
+        className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
+      >
+        {projects.map((project, index) => (
+          <button
+            key={project.no}
+            ref={(el) => {
+              railButtonRefs.current[index] = el
+            }}
+            type="button"
+            onClick={() => scrollToProject(index)}
+            className={railButtonClassName(activeProject === index)}
           >
+            {project.title}
+          </button>
+        ))}
+      </nav>
+    </div>
+  )
+
+  return (
+    <>
+      <div className="pt-20 px-6">
+        <div className="w-full min-w-0 max-w-page mx-auto py-20">
+          <h1 className="text-5xl md:text-7xl tracking-tight mb-16">WORK</h1>
+
+          <div className="grid grid-cols-1 gap-12">
             {projects.map((project, index) => (
-              <button
+              <WorkProjectSet
                 key={project.no}
-                ref={(el) => {
-                  railButtonRefs.current[index] = el
+                project={project}
+                onBlockRef={(el) => {
+                  projectRefs.current[index] = el
                 }}
-                type="button"
-                onClick={() => scrollToProject(index)}
-                className={railButtonClassName(activeProject === index)}
-              >
-                {project.title}
-              </button>
+              />
             ))}
-          </nav>
+          </div>
         </div>
       </div>
-    </div>
+      {createPortal(workProjectRail, document.body)}
+    </>
   )
 }
