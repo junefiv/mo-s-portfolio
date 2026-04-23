@@ -1,5 +1,6 @@
-# Vite `dist`를 GitHub Pages에 올립니다. 루트 index.html(/src/main.tsx)만 쓰면 흰 화면이 납니다.
-# 저장소: Settings → Pages → Build and deployment → Source: GitHub Actions 로 설정하세요.
+# Vite `dist`만 Pages에 올립니다. 루트 index.html(/src/main.tsx) → 흰 화면.
+# Settings → Pages → Source: "GitHub Actions" (Branch / (root) 아님)
+# 액션은 Node 24 런타임(@v5+ / @v6) 사용 — Node 20 경고 방지
 
 name: Deploy to GitHub Pages
 
@@ -18,19 +19,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install
@@ -42,13 +40,20 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - name: Deploy
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
