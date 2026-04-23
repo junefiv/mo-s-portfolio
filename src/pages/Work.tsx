@@ -2,8 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import WorkImageCarousel from '../components/WorkImageCarousel'
 
-const pics = (projectNo: number, col: 'L' | 'R', slot: number) =>
-  `https://picsum.photos/seed/w${projectNo}-${col}${slot}/800/1066`
+/** picsum 목업: 슬롯마다 가로·정사각·세로 비율 혼합 (캐러셀 object-contain 테스트용) */
+const WORK_MOCK_DIMS: readonly [w: number, h: number][] = [
+  [1200, 720],
+  [800, 800],
+  [640, 960],
+]
+
+const pics = (projectNo: number, col: 'L' | 'R', slot: number) => {
+  const dimIdx = (slot + (col === 'R' ? 1 : 0)) % WORK_MOCK_DIMS.length
+  const [w, h] = WORK_MOCK_DIMS[dimIdx]!
+  return `https://picsum.photos/seed/w${projectNo}-${col}${slot}/${w}/${h}`
+}
 
 const AUTO_INTERVAL_MS = 10_000
 
@@ -149,7 +159,7 @@ function WorkProjectSet({
                   id={bodyId}
                   role="region"
                   aria-labelledby={`${bodyId}-toggle`}
-                  className="border-t border-border/50 pt-3 text-sm leading-relaxed text-foreground/90 whitespace-pre-line md:mt-1 md:border-t md:pt-3"
+                  className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line"
                 >
                   {project.body}
                 </div>

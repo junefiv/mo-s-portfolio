@@ -1,6 +1,5 @@
 import { Route, Routes } from 'react-router'
 import Navigation from './components/Navigation'
-import Academics from './pages/Academics'
 import Fabrication from './pages/Fabrication'
 import News from './pages/News'
 import Info from './pages/Info'
@@ -12,7 +11,6 @@ export default function App() {
       <Navigation />
       <Routes>
         <Route path="/" element={<News />} />
-        <Route path="/academics" element={<Academics />} />
         <Route path="/work" element={<Work />} />
         <Route path="/fabrication" element={<Fabrication />} />
         <Route path="/info" element={<Info />} />

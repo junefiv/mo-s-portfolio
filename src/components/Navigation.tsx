@@ -34,7 +34,6 @@ export default function Navigation() {
 
   const links = [
     { path: '/', label: 'NEWS' },
-    { path: '/academics', label: 'ACADEMICS' },
     { path: '/work', label: 'WORK' },
     { path: '/fabrication', label: 'FABRICATION' },
     { path: '/info', label: 'INFO' },
@@ -119,7 +118,7 @@ export default function Navigation() {
               to="/"
               className="inline-block text-sm font-medium tracking-[0.2em] text-foreground transition-opacity hover:opacity-70"
             >
-              MORTFOLIO
+              Studio DeCho
             </Link>
           </div>
 
