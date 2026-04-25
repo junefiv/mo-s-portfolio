@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import {fetchNewsPosts, type SanityNewsPost} from '../lib/newsFromSanity'
+import {fetchNewsPosts, type SanityNewsPost} from '@/lib/newsFromSanity'
 
 type NewsItem = {
   id: string

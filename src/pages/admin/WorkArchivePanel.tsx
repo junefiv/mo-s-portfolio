@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import {CSS} from '@dnd-kit/utilities'
 import {startTransition, useCallback, useEffect, useState} from 'react'
-import {adminGetJson, adminPostJson} from '../../lib/adminApi'
+import {adminGetJson, adminPostJson} from '@/lib/adminApi'
 
 type Row = {_id: string; title: string | null; projectNo: number | null}
 

@@ -11,7 +11,7 @@ import {
   fabricationBodyToParagraphs,
   fetchFabricationEntries,
   type SanityFabricationEntry,
-} from '../lib/fabricationFromSanity'
+} from '@/lib/fabricationFromSanity'
 
 type FabricationEntry = {
   id: string

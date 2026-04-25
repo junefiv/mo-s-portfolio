@@ -6,7 +6,7 @@ import {
   clearStoredAdminSecret,
   getStoredAdminSecret,
   setStoredAdminSecret,
-} from '../../lib/adminApi'
+} from '@/lib/adminApi'
 import FabricationArchivePanel from './FabricationArchivePanel'
 import WorkArchivePanel from './WorkArchivePanel'
 

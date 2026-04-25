@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
 import WorkImageCarousel from '../components/WorkImageCarousel'
-import {fetchWorkProjects} from '../lib/workFromSanity'
+import {fetchWorkProjects} from '@/lib/workFromSanity'
 
 const AUTO_INTERVAL_MS = 10_000
 

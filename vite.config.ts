@@ -22,6 +22,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    resolve: {
+      alias: {
+        '@': join(__dirname, 'src'),
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),

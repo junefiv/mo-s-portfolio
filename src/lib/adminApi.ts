@@ -3,6 +3,11 @@ export const ADMIN_SECRET_STORAGE_KEY = 'portfolio_admin_secret'
 
 const SESSION_HEADER = 'x-admin-secret'
 
+/** JSON이 아닐 때(정적 호스팅 404·index.html 등) 로그인 실패 원인 안내 */
+const ADMIN_NON_JSON_HINT =
+  '응답이 JSON이 아닙니다. GitHub Pages처럼 정적 배포만 하면 `/api/admin` 서버가 없어 이렇게 됩니다. ' +
+  '관리 화면은 로컬에서 `npm run dev`로 쓰거나, Vercel·Railway 등에 관리 API를 올린 뒤 빌드 시 `VITE_ADMIN_API_ORIGIN`(예: `https://내-api.example.com`)을 설정하세요.'
+
 export function adminApiUrl(path: string): string {
   const normalized = path.startsWith('/') ? path : `/${path}`
   const origin = (import.meta.env.VITE_ADMIN_API_ORIGIN ?? '').replace(/\/$/, '')
@@ -21,7 +26,7 @@ export async function adminAuth(secret: string): Promise<{ok: boolean; error?: s
   try {
     data = (await res.json()) as {ok?: boolean; error?: string}
   } catch {
-    return {ok: false, error: '서버 응답을 읽을 수 없습니다.'}
+    return {ok: false, error: ADMIN_NON_JSON_HINT}
   }
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: !!data.ok}
@@ -56,7 +61,7 @@ export async function adminGetJson<T extends Record<string, unknown>>(
   try {
     data = (await res.json()) as T & {ok?: boolean; error?: string}
   } catch {
-    return {ok: false, error: '서버 응답을 읽을 수 없습니다.'}
+    return {ok: false, error: ADMIN_NON_JSON_HINT}
   }
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: true, data}
@@ -80,7 +85,7 @@ export async function adminPostJson(
   try {
     data = (await res.json()) as {ok?: boolean; error?: string}
   } catch {
-    return {ok: false, error: '서버 응답을 읽을 수 없습니다.'}
+    return {ok: false, error: ADMIN_NON_JSON_HINT}
   }
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: !!data.ok}
@@ -101,7 +106,7 @@ export async function adminPostMultipart(
   try {
     data = (await res.json()) as {ok?: boolean; error?: string; id?: string}
   } catch {
-    return {ok: false, error: '서버 응답을 읽을 수 없습니다.'}
+    return {ok: false, error: ADMIN_NON_JSON_HINT}
   }
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: !!data.ok, id: typeof data.id === 'string' ? data.id : undefined}
