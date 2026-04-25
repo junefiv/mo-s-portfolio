@@ -64,16 +64,18 @@ GitHub Pages는 **정적 파일만** 올라가서 `/api/admin` 이 없습니다.
 - 이름: `VITE_ADMIN_API_ORIGIN`
 - 값: `https://mo-portfolio-admin.vercel.app` 처럼 **슬래시 없이** Vercel 도메인만.
 
-### GitHub Actions로 빌드하는 경우
+### GitHub Actions로 빌드하는 경우 (이 레포 기본)
 
-워크플로 YAML의 `build` 단계에 `env` 를 추가합니다.
+`.github/workflows/deploy-github-pages.yml` 의 Build 단계에 이미 다음이 들어 있습니다.
 
-```yaml
-env:
-  VITE_ADMIN_API_ORIGIN: https://본인-프로젝트.vercel.app
-```
+`VITE_ADMIN_API_ORIGIN: ${{ secrets.VITE_ADMIN_API_ORIGIN }}`
 
-비밀 URL로 숨기려면 Repository **Settings** → **Secrets and variables** → **Actions** 에 시크릿을 만들고 `secrets.VERCEL_ADMIN_ORIGIN` 처럼 참조해도 됩니다.
+GitHub 저장소에서 **Settings** → **Secrets and variables** → **Actions** → **New repository secret** 으로:
+
+- **Name**: `VITE_ADMIN_API_ORIGIN` (이 이름과 **완전히 동일**해야 함)
+- **Secret**: `https://본인-프로젝트.vercel.app` (끝에 `/` 없음)
+
+저장한 뒤 **Actions** 탭에서 **Deploy to GitHub Pages** 워크플로를 다시 실행하거나 `main` 에 푸시하면, 빌드된 JS에 Vercel API 주소가 박힙니다. 시크릿을 안 넣으면 값이 비어 있어 `/admin` 이 여전히 GitHub Pages로만 요청을 보내고, 같은 JSON 오류가 납니다.
 
 ### 로컬에서 `npm run build` 후 `dist` 를 올리는 경우
 

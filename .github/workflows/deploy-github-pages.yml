@@ -34,10 +34,14 @@ jobs:
       - name: Install
         run: npm ci
 
+      # GitHub Pages에는 /api/admin 이 없음. Vercel 등에 올린 관리 API 주소를
+      # Repo → Settings → Secrets and variables → Actions → New repository secret
+      # Name: VITE_ADMIN_API_ORIGIN  Value: https://본인프로젝트.vercel.app (끝 슬래시 없음)
       - name: Build
         run: npm run build
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
+          VITE_ADMIN_API_ORIGIN: ${{ secrets.VITE_ADMIN_API_ORIGIN }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
