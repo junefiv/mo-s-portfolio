@@ -7,19 +7,11 @@ import {
   type TransitionEvent,
 } from 'react'
 import WorkImageCarousel from '../components/WorkImageCarousel'
-
-/** picsum 목업: 인덱스마다 가로·정사각·세로 등 비율 혼합 */
-const FAB_MOCK_DIMS: readonly [w: number, h: number][] = [
-  [1180, 700],
-  [820, 820],
-  [660, 980],
-  [1000, 520],
-]
-
-const fabPic = (entryId: string, i: number) => {
-  const [w, h] = FAB_MOCK_DIMS[i % FAB_MOCK_DIMS.length]!
-  return `https://picsum.photos/seed/fab-${entryId}-${i}/${w}/${h}`
-}
+import {
+  fabricationBodyToParagraphs,
+  fetchFabricationEntries,
+  type SanityFabricationEntry,
+} from '../lib/fabricationFromSanity'
 
 type FabricationEntry = {
   id: string
@@ -27,85 +19,73 @@ type FabricationEntry = {
   title: string
   institution: string
   type: string
-  /** 본문 문단 */
   paragraphs: string[]
-  /** 캐러셀 이미지 URL */
   images: string[]
 }
 
-const ENTRIES: FabricationEntry[] = [
-  {
-    id: 'adf-2026',
-    year: '2026',
-    title: 'Advanced Digital Fabrication',
-    institution: 'MIT Architecture',
-    type: 'Workshop',
-    paragraphs: [
-      'This intensive, hands-on workshop is designed to immerse students comprehensively in the entire digital manufacturing pipeline. Through a series of rigorous practical modules, participants will navigate the complex journey from initial digital file preparation and geometry optimization to advanced machine operations, including multi-axis CNC milling, precision laser cutting, and the complex kinematic programming required for industrial robotic arm integration.',
-      'The culmination of the workshop requires students to synthesize these diverse skill sets into tangible outcomes. Deliverables consist of a fully realized, 1:1 scale physical prototype that demonstrates structural and aesthetic integrity, accompanied by a professional-grade, highly detailed fabrication drawing package that thoroughly documents the machine toolpaths and assembly logistics.'
-    ],
-    images: [
-      fabPic('adf-2026', 0),
-      fabPic('adf-2026', 1),
-      fabPic('adf-2026', 2),
-    ],
-  },
-  {
-    id: 'cds-2025',
-    year: '2025',
-    title: 'Computational Design Studio',
-    institution: 'Harvard GSD',
-    type: 'Studio',
-    paragraphs: [
-      'This advanced studio environment fundamentally challenges traditional architectural workflows by tightly integrating complex parametric modeling with real-time environmental and structural simulations. By directly linking computational fluid dynamics (CFD) for ventilation and finite element analysis (FEA) for structural performance with generative geometries, we actively shorten and optimize the iterative feedback loop between conceptual design and physical fabrication feasibility.',
-      'Operating entirely in collaborative, multidisciplinary teams, students are expected to develop robust, adaptable computational systems rather than static forms. The final studio submission mandates a dual deliverable: a comprehensive library of original algorithmic script assets alongside high-fidelity physical prototypes that validate the computational logic through physical material constraints.'
-    ],
-    images: [fabPic('cds-2025', 0), fabPic('cds-2025', 1)],
-  },
-  {
-    id: 'ms-2025',
-    year: '2025',
-    title: 'Material Systems',
-    institution: 'Columbia GSAPP',
-    type: 'Seminar',
-    paragraphs: [
-      'This theoretical and practical seminar deeply investigates the fundamental logic governing both the reversible and irreversible physical deformations of various raw materials under environmental stress. Through rigorous academic discourse and systematic categorization, we explore how specific material properties dictate potential tectonic assemblies and structural capabilities. To ground these theoretical frameworks, every seminar session is directly coupled with mandatory, small-scale physical bench tests, allowing students to empirically observe and document material behaviors in real-time.'
-    ],
-    images: [
-      fabPic('ms-2025', 0),
-      fabPic('ms-2025', 1),
-      fabPic('ms-2025', 2),
-      fabPic('ms-2025', 3),
-    ],
-  },
-  {
-    id: 'rc-2024',
-    year: '2024',
-    title: 'Robotic Construction',
-    institution: 'ETH Zurich',
-    type: 'Research',
-    paragraphs: [
-      'This cutting-edge research initiative critically examines the complex physical and digital interfaces between autonomous on-site construction robots and standardized prefabricated architectural modules. The primary research directives heavily focus on developing robust dynamic safety zones for human-machine collaboration, engineering highly responsive real-time sensor feedback loops, and utilizing machine learning algorithms for the autonomous optimization of complex construction task sequencing.',
-      'To validate these digital methodologies, our team operates a dedicated physical pilot cell. By continuously monitoring and extracting high-resolution cycle time and error-rate data from these live automated assembly trials, we iteratively refine and profoundly readjust the overarching digital workflow, ensuring maximum efficiency and precision before scaling up to full-scale architectural deployment.'
-    ],
-    images: [fabPic('rc-2024', 0), fabPic('rc-2024', 1)],
-  },
-];
+function mapSanityToEntry(r: SanityFabricationEntry): FabricationEntry | null {
+  if (!r._id || !r.title) return null
+  const images = (r.images ?? []).filter((u): u is string => !!u)
+  if (!images.length) return null
+  return {
+    id: r._id,
+    year: r.year ?? '',
+    title: r.title ?? '',
+    institution: r.subTitle ?? '',
+    type: r.category ?? '',
+    paragraphs: fabricationBodyToParagraphs(r.body ?? ''),
+    images,
+  }
+}
 
 export default function Fabrication() {
+  const [entries, setEntries] = useState<FabricationEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   const [openId, setOpenId] = useState<string | null>(null)
   /** 닫힘 애니메이션 중에도 패널 DOM 유지 */
   const [mountedId, setMountedId] = useState<string | null>(null)
   /** grid-rows 1fr ↔ 0fr — 열림/닫힘 모두 전환 */
   const [panelExpanded, setPanelExpanded] = useState(false)
-  const [carouselIndex, setCarouselIndex] = useState<Record<string, number>>(
-    {},
-  )
+  const [carouselIndex, setCarouselIndex] = useState<Record<string, number>>({})
 
   const openIdRef = useRef(openId)
   const panelExpandedRef = useRef(panelExpanded)
   openIdRef.current = openId
   panelExpandedRef.current = panelExpanded
+
+  const loadEntries = useCallback(async (opts?: {background?: boolean}) => {
+    const bg = opts?.background === true
+    if (!bg) {
+      setLoading(true)
+      setError(null)
+    }
+    try {
+      const rows = await fetchFabricationEntries()
+      const mapped = rows
+        .map(mapSanityToEntry)
+        .filter((e): e is FabricationEntry => e !== null)
+      setEntries(mapped)
+      if (!bg) setError(null)
+    } catch (e) {
+      if (!bg) setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      if (!bg) setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadEntries()
+  }, [loadEntries])
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void loadEntries({background: true})
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [loadEntries])
 
   useLayoutEffect(() => {
     if (openId) setMountedId(openId)
@@ -148,16 +128,42 @@ export default function Fabrication() {
   )
 
   const onCarouselIndexChange = useCallback((id: string, index: number) => {
-    setCarouselIndex((prev) => ({ ...prev, [id]: index }))
+    setCarouselIndex((prev) => ({...prev, [id]: index}))
   }, [])
+
+  if (loading) {
+    return (
+      <main className="min-w-0 px-6 pt-20">
+        <p className="mx-auto max-w-page text-sm text-muted-foreground">불러오는 중…</p>
+      </main>
+    )
+  }
+
+  if (error) {
+    return (
+      <main className="min-w-0 px-6 pt-20">
+        <p className="mx-auto max-w-page text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      </main>
+    )
+  }
+
+  if (entries.length === 0) {
+    return (
+      <main className="min-w-0 px-6 pt-20">
+        <p className="mx-auto max-w-page text-sm text-muted-foreground">
+          등록된 Fabrication 항목이 없습니다.
+        </p>
+      </main>
+    )
+  }
 
   return (
     <main className="min-w-0 px-6 pt-20">
-      <div className="mx-auto w-full min-w-0 max-w-page py-20">
-      
-
+      <div className="mx-auto w-full min-w-0 max-w-page py-25">
         <div className="flex min-w-0 flex-col gap-1">
-          {ENTRIES.map((entry) => {
+          {entries.map((entry) => {
             const isOpen = openId === entry.id
             const showPanel = mountedId === entry.id
             const gridOpen = showPanel && panelExpanded
@@ -198,9 +204,7 @@ export default function Fabrication() {
                             images={entry.images}
                             label={`${entry.title} — 이미지`}
                             index={imgIndex}
-                            onIndexChange={(i) =>
-                              onCarouselIndexChange(entry.id, i)
-                            }
+                            onIndexChange={(i) => onCarouselIndexChange(entry.id, i)}
                           />
                         </div>
                         <div className="min-w-0 space-y-4 text-base leading-relaxed text-foreground/90">

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { adminApiPlugin } from './vite/adminApiPlugin'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -24,6 +25,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
+      adminApiPlugin(),
       {
         name: 'gh-pages-404',
         closeBundle() {

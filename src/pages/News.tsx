@@ -1,56 +1,25 @@
+import {useEffect, useState} from 'react'
+import {fetchNewsPosts, type SanityNewsPost} from '../lib/newsFromSanity'
+
 type NewsItem = {
   id: string
-  /** ISO `YYYY-MM-DD` — 정렬·`<time dateTime>`용 */
   date: string
   title: string
   body: string
   image: string
 }
 
-const NEWS_ITEMS: NewsItem[] = [
-  {
-    id: 'n-6',
-    date: '2026-04-18',
-    title: 'Seoul Architecture Festival Panel Talk',
-    body: 'We participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digitWe participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digitWe participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digitWe participated in an insightful panel discussion at the Seoul Architecture Festival, focusing on the critical challenges of translating digital designs into physical realities. The conversation highlighted innovative collaborative workflows and recent case studies that successfully bridge the historical gap between high-precision digital fabrication methods and the unpredictable variables of on-site construction.',
-    image: 'https://picsum.photos/seed/news-n6/800/800',
-  },
-  {
-    id: 'n-5',
-    date: '2026-03-02',
-    title: 'Architects Institute Journal Interview',
-    body: 'We were recently featured in an in-depth interview with the Architects Institute Journal. The discussion explored our unique operational philosophy, specifically how we seamlessly integrate rigorous academic research lab management with ongoing educational curriculum demands. Furthermore, we shared our comprehensive strategies for systematically archiving and exhibiting student work to foster continuous knowledge transfer within the institution.',
-    image: 'https://picsum.photos/seed/news-n5/800/800',
-  },
-  {
-    id: 'n-4',
-    date: '2025-11-20',
-    title: 'International Workshop "Material Loop"',
-    body: 'We hosted "Material Loop," a multi-day international workshop dedicated to circular economy principles in architecture. Participants engaged in hands-on sessions that paired our extensive physical material sample library with custom Life Cycle Assessment (LCA) computational worksheets. The core objective was to empower designers to proactively trace and visualize potential waste pathways and material life-spans from the very earliest stages of the schematic design process.',
-    image: 'https://picsum.photos/seed/news-n4/800/800',
-  },
-  {
-    id: 'n-3',
-    date: '2025-08-07',
-    title: 'Gallery Solo Exhibition Opening',
-    body: 'We successfully launched the opening reception for our latest solo gallery exhibition. The curated spatial arrangement deliberately juxtaposed our recent series of highly detailed, small-scale physical prototypes alongside immersive, large-format architectural prints. This curated tension within the gallery space was designed to explicitly illustrate the drastic shifts in scale, resolution, and materiality that occur throughout our iterative digital production process.',
-    image: 'https://picsum.photos/seed/news-n3/800/800',
-  },
-  {
-    id: 'n-2',
-    date: '2025-04-15',
-    title: 'Research Grant Project Kick-off',
-    body: 'We are thrilled to announce the official kick-off of a major, fully funded three-year academic research grant. This ambitious project aims to fundamentally rethink human-machine collaboration on construction sites. Our primary focus will be engineering a robust, integrated system that seamlessly merges physical safety interlock mechanisms on large-scale robotic assembly lines with highly intuitive, augmented reality-based User Interfaces (UI) for on-site human operators.',
-    image: 'https://picsum.photos/seed/news-n2/800/800',
-  },
-  {
-    id: 'n-1',
-    date: '2024-12-01',
-    title: 'Year-End Open Studio',
-    body: 'To close out the year, we transformed our workspace into a public forum for our annual Year-End Open Studio event. We opened our digital and physical archives, exhibiting a vast array of work-in-progress physical models, complex computational scripts, and immersive process videos. The event culminated in a vibrant, interactive feedback session, fostering invaluable dialogue between our core research team, industry professionals, and the general public.',
-    image: 'https://picsum.photos/seed/news-n1/800/800',
-  },
-];
+function mapSanityToItems(rows: SanityNewsPost[]): NewsItem[] {
+  return rows
+    .filter((r) => r._id && r.title)
+    .map((r) => ({
+      id: r._id,
+      date: (r.date ?? '').slice(0, 10) || '1970-01-01',
+      title: r.title ?? '',
+      body: r.body ?? '',
+      image: r.coverUrl ?? '',
+    }))
+}
 
 function formatNewsDate(iso: string) {
   const d = new Date(`${iso}T12:00:00`)
@@ -62,44 +31,86 @@ function formatNewsDate(iso: string) {
 }
 
 export default function News() {
-  const sorted = [...NEWS_ITEMS].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  )
+  const [items, setItems] = useState<NewsItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const rows = await fetchNewsPosts()
+        if (!cancelled) setItems(mapSanityToItems(rows))
+      } catch (e) {
+        if (!cancelled) {
+          const msg = e instanceof Error ? e.message : String(e)
+          setError(
+            `${msg} — 브라우저에서 Sanity API를 쓰려면 sanity.io/manage → API → CORS origins에 이 사이트 주소(예: http://localhost:5173)를 등록했는지 확인하세요.`,
+          )
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <main className="min-w-0 px-6 pt-20">
-      <div className="mx-auto w-full min-w-0 max-w-page py-20">
-        
+      <div className="mx-auto w-full min-w-0 max-w-page py-25">
+        <h1 className="mb-10 text-4xl font-semibold tracking-tight text-foreground sm:mb-12 sm:text-5xl md:text-6xl">
+          NEWS
+        </h1>
 
-        <ul className="grid min-w-0 list-none grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-5">
-          {sorted.map((item) => (
-            <li key={item.id} className="min-w-0">
-              <article className="flex min-w-0 flex-col gap-1.5">
-                <div className="aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-muted">
-                  <img
-                    src={item.image}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <h2 className="text-xl font-medium leading-snug tracking-tight text-foreground">
-                  {item.title}
-                </h2>
-                <time
-                  dateTime={item.date}
-                  className="text-sm text-muted-foreground"
-                >
-                  {formatNewsDate(item.date)}
-                </time>
-                <p className="text-sm leading-relaxed text-foreground/90">
-                  {item.body}
-                </p>
-              </article>
-            </li>
-          ))}
-        </ul>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">불러오는 중…</p>
+        ) : error ? (
+          <p className="max-w-prose text-sm leading-relaxed text-destructive" role="alert">
+            {error}
+          </p>
+        ) : items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            등록된 뉴스가 없습니다. /admin 에서 newsPost를 추가하거나 Studio에서 확인하세요.
+          </p>
+        ) : (
+          <ul className="grid min-w-0 list-none grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-5">
+            {items.map((item) => (
+              <li key={item.id} className="min-w-0">
+                <article className="flex min-w-0 flex-col gap-1.5">
+                  <div className="aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-muted">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center text-xs text-muted-foreground"
+                        aria-hidden
+                      >
+                        이미지 없음
+                      </div>
+                    )}
+                  </div>
+                  <h2 className="text-xl font-medium leading-snug tracking-tight text-foreground">
+                    {item.title}
+                  </h2>
+                  <time dateTime={item.date} className="text-sm text-muted-foreground">
+                    {formatNewsDate(item.date)}
+                  </time>
+                  <p className="text-sm leading-relaxed text-foreground/90">{item.body}</p>
+                </article>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </main>
   )
