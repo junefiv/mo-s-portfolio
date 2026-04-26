@@ -60,11 +60,9 @@ export default function News() {
   }, [])
 
   return (
-    <main className="min-w-0 px-6 pt-20">
-      <div className="mx-auto w-full min-w-0 max-w-page py-25">
-        <h1 className="mb-10 text-4xl font-semibold tracking-tight text-foreground sm:mb-12 sm:text-5xl md:text-6xl">
-          NEWS
-        </h1>
+    <main className="min-w-0 px-6">
+      <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-25">
+       
 
         {loading ? (
           <p className="text-sm text-muted-foreground">불러오는 중…</p>

@@ -61,9 +61,9 @@ export default function AdminPage() {
   }, [])
 
   return (
-    <main className="min-w-0 px-6 pt-20 pb-16">
+    <main className="min-w-0 px-6 pb-16">
       <AdminToastListener />
-      <div className="mx-auto w-full min-w-0 max-w-page py-10">
+      <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-10">
         <div className="mb-8 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">

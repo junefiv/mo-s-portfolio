@@ -16,14 +16,16 @@ export default function App() {
   return (
     <div className="mx-auto min-h-screen w-full min-w-0 max-w-page">
       <Navigation />
-      <Routes>
-        <Route path="/" element={<Work />} />
-        <Route path="/work" element={<Navigate to="/" replace />} />
-        <Route path="/news" element={<News />} />
-        <Route path="/fabrication" element={<Fabrication />} />
-        <Route path="/info" element={<Info />} />
-        <Route path="/admin" element={<AdminPage />} />
-      </Routes>
+      <div className="min-w-0">
+        <Routes>
+          <Route path="/" element={<Work />} />
+          <Route path="/work" element={<Navigate to="/" replace />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/fabrication" element={<Fabrication />} />
+          <Route path="/info" element={<Info />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </div>
     </div>
   )
 }

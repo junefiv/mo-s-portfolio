@@ -25,6 +25,9 @@ function isMultiRowMenu(ul: HTMLUListElement) {
 
 export default function Navigation() {
   const location = useLocation()
+  const navRootRef = useRef<HTMLElement>(null)
+  /** border·py-3 래퍼 — `<nav>`만으로는 잡히지 않는 내부 높이 변화도 RO로 전달 */
+  const navShellRef = useRef<HTMLDivElement>(null)
   const [isScrolling, setIsScrolling] = useState(false)
   const scrollEndRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -49,6 +52,87 @@ export default function Navigation() {
   useLayoutEffect(() => {
     updateHamburger()
   }, [updateHamburger, location.pathname])
+
+  /**
+   * 고정 `<nav>` 실제 높이 → `:root`의 `--nav-height`
+   * RO 콜백을 rAF로 묶어 루프 한도·같은 프레임 다중 호출 시 누락을 줄임.
+   * observer는 마운트 시 1회만 유지(아코디언·햄버거 전환마다 끊지 않음).
+   */
+  useLayoutEffect(() => {
+    const nav = navRootRef.current
+    if (!nav) return
+    const root = document.documentElement
+
+    let roRaf = 0
+    const apply = () => {
+      void nav.offsetHeight
+      const h = nav.getBoundingClientRect().height
+      if (h > 0.5) {
+        root.style.setProperty('--nav-height', `${h}px`)
+      } else {
+        root.style.removeProperty('--nav-height')
+      }
+    }
+
+    const scheduleApply = () => {
+      cancelAnimationFrame(roRaf)
+      roRaf = requestAnimationFrame(() => {
+        roRaf = 0
+        apply()
+      })
+    }
+
+    apply()
+    requestAnimationFrame(() => {
+      requestAnimationFrame(apply)
+    })
+
+    const ro = new ResizeObserver(() => scheduleApply())
+    ro.observe(nav)
+    const shell = navShellRef.current
+    if (shell) ro.observe(shell)
+
+    const onWinResize = () => scheduleApply()
+    window.addEventListener('resize', onWinResize, { passive: true })
+    const vv = window.visualViewport
+    vv?.addEventListener('resize', onWinResize, { passive: true })
+    window.addEventListener('orientationchange', onWinResize, { passive: true })
+
+    const onNavTransitionEnd = (e: TransitionEvent) => {
+      if (e.propertyName !== 'grid-template-rows') return
+      scheduleApply()
+    }
+    nav.addEventListener('transitionend', onNavTransitionEnd)
+
+    let cancelled = false
+    void document.fonts.ready.then(() => {
+      if (!cancelled) scheduleApply()
+    })
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(roRaf)
+      ro.disconnect()
+      window.removeEventListener('resize', onWinResize)
+      vv?.removeEventListener('resize', onWinResize)
+      window.removeEventListener('orientationchange', onWinResize)
+      nav.removeEventListener('transitionend', onNavTransitionEnd)
+      root.style.removeProperty('--nav-height')
+    }
+  }, [])
+
+  /** 라우트만 바뀌고 박스 크기가 같을 때를 대비 */
+  useLayoutEffect(() => {
+    const nav = navRootRef.current
+    if (!nav) return
+    requestAnimationFrame(() => {
+      void nav.offsetHeight
+      const h = nav.getBoundingClientRect().height
+      if (h > 0.5) {
+        document.documentElement.style.setProperty('--nav-height', `${h}px`)
+      }
+    })
+  }, [location.pathname])
 
   useEffect(() => {
     const el = measureRef.current
@@ -100,10 +184,12 @@ export default function Navigation() {
 
   return (
     <nav
+      ref={navRootRef}
       className="fixed top-0 left-0 right-0 z-50"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div
+        ref={navShellRef}
         className={`mx-auto w-full min-w-0 max-w-page border-b px-6 py-3 transition-all duration-1000 ease-in-out ${
           isScrolling
             ? 'border-transparent bg-transparent'

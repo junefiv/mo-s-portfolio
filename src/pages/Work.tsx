@@ -327,7 +327,7 @@ export default function Work() {
 
   if (loadErr) {
     return (
-      <div className="px-6 pt-20">
+      <div className="px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-destructive" role="alert">
           {loadErr}
         </p>
@@ -337,7 +337,7 @@ export default function Work() {
 
   if (loadDone && projects.length === 0) {
     return (
-      <div className="px-6 pt-20">
+      <div className="px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-muted-foreground">
           등록된 WORK 프로젝트가 없습니다. /admin 또는 Sanity Studio에서 추가하세요.
         </p>
@@ -347,7 +347,7 @@ export default function Work() {
 
   if (!loadDone) {
     return (
-      <div className="px-6 pt-20">
+      <div className="px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-muted-foreground">불러오는 중…</p>
       </div>
     )
@@ -355,8 +355,8 @@ export default function Work() {
 
   return (
     <>
-      <div className="px-6 pt-20">
-        <div className="mx-auto w-full min-w-0 max-w-page py-25">
+      <div className="px-6">
+        <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-25">
           <div className="grid grid-cols-1 gap-12">
             {projects.map((project, index) => (
               <WorkProjectSet

@@ -2,8 +2,8 @@ import {Link} from 'react-router'
 
 export default function Info() {
   return (
-    <main className="px-6 pt-20">
-      <div className="mx-auto w-full min-w-0 max-w-page py-20">
+    <main className="px-6">
+      <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-20">
         <h1 className="mb-8 text-5xl tracking-tight md:text-7xl">INFO</h1>
         
         <Link

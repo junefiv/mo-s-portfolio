@@ -133,7 +133,7 @@ export default function Fabrication() {
 
   if (loading) {
     return (
-      <main className="min-w-0 px-6 pt-20">
+      <main className="min-w-0 px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-muted-foreground">불러오는 중…</p>
       </main>
     )
@@ -141,7 +141,7 @@ export default function Fabrication() {
 
   if (error) {
     return (
-      <main className="min-w-0 px-6 pt-20">
+      <main className="min-w-0 px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-destructive" role="alert">
           {error}
         </p>
@@ -151,7 +151,7 @@ export default function Fabrication() {
 
   if (entries.length === 0) {
     return (
-      <main className="min-w-0 px-6 pt-20">
+      <main className="min-w-0 px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-muted-foreground">
           등록된 Fabrication 항목이 없습니다.
         </p>
@@ -160,8 +160,8 @@ export default function Fabrication() {
   }
 
   return (
-    <main className="min-w-0 px-6 pt-20">
-      <div className="mx-auto w-full min-w-0 max-w-page py-25">
+    <main className="min-w-0 px-6">
+      <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-25">
         <div className="flex min-w-0 flex-col gap-1">
           {entries.map((entry) => {
             const isOpen = openId === entry.id

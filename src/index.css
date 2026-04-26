@@ -178,6 +178,17 @@
   max-width: var(--max-w-page);
 }
 
+/**
+ * 본문 상단: Navigation 실측(--nav-height, JS) + py-1(0.25rem).
+ * 측정 전·실패 시: safe-area + 뷰포트별 네비 크롬 추정(--nav-height-fallback-est).
+ * 브레이크포인트는 @theme 의 xs/sm/md/lg 와 동일(min-width).
+ */
+@utility pt-page-below-nav {
+  padding-top: calc(
+    var(--nav-height, var(--nav-height-fallback-est)) + 0.25rem
+  );
+}
+
 /** 네비 상단 사이트명 등 — `public/fonts/PyeojinGothic-Bold.otf` */
 @utility font-site-logo {
   font-family:
@@ -191,6 +202,47 @@
 }
 
 @layer base {
+  /**
+   * 고정 `<nav>` 전체 높이 추정(로고 text-8xl + py-3 + 메뉴/햄버거).
+   * JS가 `document.documentElement`에 `--nav-height`를 px로 넣으면 그 값이 우선됩니다.
+   */
+  :root {
+    --nav-chrome-est: 11.5rem;
+    --nav-height-fallback-est: calc(
+      env(safe-area-inset-top, 0px) + var(--nav-chrome-est)
+    );
+  }
+
+  @media (min-width: 30rem) {
+    :root {
+      --nav-chrome-est: 11.125rem;
+    }
+  }
+
+  @media (min-width: 40rem) {
+    :root {
+      --nav-chrome-est: 10.75rem;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    :root {
+      --nav-chrome-est: 10.25rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    :root {
+      --nav-chrome-est: 9.75rem;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    :root {
+      --nav-chrome-est: 9.5rem;
+    }
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
