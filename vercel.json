@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node -e \"console.log('admin-api-only skip frontend build')\"",
+  "buildCommand": "node scripts/vercel-admin-api-build.mjs",
+  "outputDirectory": "dist",
   "functions": {
     "api/admin/[...path].ts": {
       "maxDuration": 10
