@@ -69,16 +69,7 @@ export default function AdminPage() {
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               콘텐츠 등록
             </h1>
-            <p className="mt-2 max-w-prose text-sm leading-relaxed text-foreground/75">
-              Sanity 데이터셋에 문서를 추가합니다. 로컬{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">npm run dev</code>에서는
-              시크릿을 안 적어도 기본값{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">123456</code>이 적용됩니다.
-              쓰기 토큰은 반드시 루트{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">.env.local</code>의{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">SANITY_API_WRITE_TOKEN</code>
-              이 필요합니다.
-            </p>
+            
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <Link

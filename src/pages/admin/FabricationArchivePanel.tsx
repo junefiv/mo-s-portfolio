@@ -158,7 +158,9 @@ function FabricationEditForm({
   const [rmImg, setRmImg] = useState<Set<number>>(() => new Set())
   const [pending, setPending] = useState<PendingSlot[]>([])
   const pendingReleaseRef = useRef<PendingSlot[]>([])
+  const pendingSubmitRef = useRef<PendingSlot[]>([])
   pendingReleaseRef.current = pending
+  pendingSubmitRef.current = pending
 
   useEffect(() => {
     return () => {
@@ -206,11 +208,22 @@ function FabricationEditForm({
     e.preventDefault()
     if (!doc) return
     const form = e.currentTarget
-    const fd = new FormData(form)
-    fd.delete('images')
-    for (const p of pending) fd.append('images', p.file)
-    fd.set('_id', doc._id)
-    fd.set('remove_image_indexes', [...rmImg].sort((a, b) => a - b).join(','))
+    const year = (form.elements.namedItem('year') as HTMLInputElement | null)?.value ?? ''
+    const title = (form.elements.namedItem('title') as HTMLInputElement | null)?.value ?? ''
+    const subTitle = (form.elements.namedItem('sub_title') as HTMLInputElement | null)?.value ?? ''
+    const category = (form.elements.namedItem('category') as HTMLInputElement | null)?.value ?? ''
+    const body = (form.elements.namedItem('body') as HTMLTextAreaElement | null)?.value ?? ''
+    const fd = new FormData()
+    fd.append('_id', doc._id)
+    fd.append('year', year)
+    fd.append('title', title)
+    fd.append('sub_title', subTitle)
+    fd.append('category', category)
+    fd.append('body', body)
+    fd.append('remove_image_indexes', [...rmImg].sort((a, b) => a - b).join(','))
+    for (const p of pendingSubmitRef.current) {
+      fd.append('images', p.file, p.file.name || 'image.jpg')
+    }
     setBusy(true)
     try {
       const r = await adminPostMultipart('/api/admin/fabrication-update', fd)
@@ -277,8 +290,8 @@ function FabricationEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        이미지: 기존 썸네일 ×는 삭제 예약(저장 시 반영). + 로 파일을 고르면 맨 뒤에 추가됩니다. 녹색 테두리는 아직 저장
-        전입니다.
+        이미지: 기존 썸네일 ×는 삭제 예약(저장 시 반영). + 를 눌러 고른 뒤 맨 뒤에 생기는 주황 테두리「저장 전」썸네일이 곧
+        올라갈 이미지입니다. 저장하기를 눌러야 Sanity에 반영됩니다.
       </p>
       <div className="min-w-0 space-y-2">
         <p className="text-xs font-medium text-foreground">이미지</p>
@@ -306,6 +319,7 @@ function FabricationEditForm({
               key={p.id}
               url={p.url}
               caption="이미지"
+              fileName={p.file.name}
               onRemove={() => {
                 setPending((prev) => {
                   const i = prev.findIndex((x) => x.id === p.id)
@@ -319,7 +333,15 @@ function FabricationEditForm({
           <AddImageButton
             inputId={`${formId}-pick-img`}
             label="이미지 추가"
-            onFiles={(files) => setPending((prev) => [...prev, ...newPendingFromFileList(files)])}
+            onFiles={(files) => {
+              const added = newPendingFromFileList(files)
+              if (!added.length) return
+              setPending((prev) => [...prev, ...added])
+              showAdminToast(
+                `이미지 ${added.length}장을 골랐습니다. 아래 저장을 누르면 업로드됩니다.`,
+                'success',
+              )
+            }}
           />
         </div>
       </div>
