@@ -238,6 +238,26 @@ function normalizeId(body: unknown): string | null {
   return typeof id === 'string' && id.trim().length > 0 ? id.trim() : null
 }
 
+function parseIndexCsv(raw: string): number[] {
+  const s = raw.trim()
+  if (!s) return []
+  const out: number[] = []
+  for (const part of s.split(',')) {
+    const n = parseInt(part.trim(), 10)
+    if (Number.isInteger(n) && n >= 0) out.push(n)
+  }
+  return out
+}
+
+function removeByIndices<T>(arr: T[], indices: number[]): T[] {
+  const uniq = [...new Set(indices)]
+    .filter((i) => i >= 0 && i < arr.length)
+    .sort((a, b) => b - a)
+  const copy = [...arr]
+  for (const i of uniq) copy.splice(i, 1)
+  return copy
+}
+
 async function applyReorderRanks(
   client: SanityClient,
   ids: string[],
@@ -596,8 +616,13 @@ export class PortfolioAdminApi {
             return
           }
           const fileMap = rq.files as {[fieldname: string]: UploadedFile[]} | undefined
-          const left = fileMap?.imagesLeft
-          const right = fileMap?.imagesRight
+          const newLeft = fileMap?.imagesLeft
+          const newRight = fileMap?.imagesRight
+          const rmL = parseIndexCsv(firstField(body, 'remove_left_indexes'))
+          const rmR = parseIndexCsv(firstField(body, 'remove_right_indexes'))
+          const hasImageChange =
+            rmL.length > 0 || rmR.length > 0 || (newLeft?.length ?? 0) > 0 || (newRight?.length ?? 0) > 0
+
           const setDoc: Record<string, unknown> = {
             title,
             body: textBody,
@@ -605,8 +630,40 @@ export class PortfolioAdminApi {
           }
           if (subTitle) setDoc.subTitle = subTitle
           else setDoc.subTitle = ''
-          if (left?.length) setDoc.imagesLeft = await uploadImages(client, left)
-          if (right?.length) setDoc.imagesRight = await uploadImages(client, right)
+
+          if (hasImageChange) {
+            const cur = await client.fetch<{
+              imagesLeft: Array<Record<string, unknown>> | null
+              imagesRight: Array<Record<string, unknown>> | null
+            } | null>(`*[_id == $id && _type == "workProject"][0]{ imagesLeft, imagesRight }`, {id: docId})
+            if (!cur) {
+              json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+              return
+            }
+            let leftArr = [...(cur.imagesLeft ?? [])]
+            let rightArr = [...(cur.imagesRight ?? [])]
+            leftArr = removeByIndices(leftArr, rmL)
+            rightArr = removeByIndices(rightArr, rmR)
+            if (newLeft?.length) {
+              const up = await uploadImages(client, newLeft)
+              leftArr = [...leftArr, ...up]
+            }
+            if (newRight?.length) {
+              const up = await uploadImages(client, newRight)
+              rightArr = [...rightArr, ...up]
+            }
+            if (!leftArr.length || !rightArr.length) {
+              json(res, 400, {
+                ok: false,
+                error:
+                  '도면(왼쪽)·작품(오른쪽)에 이미지가 각각 최소 1장 있어야 합니다. 삭제·추가 후 다시 확인하세요.',
+              })
+              return
+            }
+            setDoc.imagesLeft = leftArr
+            setDoc.imagesRight = rightArr
+          }
+
           await client.patch(docId).set(setDoc).commit()
           json(res, 200, {ok: true, id: docId})
           return
@@ -669,6 +726,9 @@ export class PortfolioAdminApi {
             return
           }
           const filesFab = rq.files as UploadedFile[] | undefined
+          const rmImg = parseIndexCsv(firstField(body, 'remove_image_indexes'))
+          const hasImageChange = rmImg.length > 0 || (filesFab?.length ?? 0) > 0
+
           const setFab: Record<string, unknown> = {
             year,
             title,
@@ -679,7 +739,32 @@ export class PortfolioAdminApi {
           else setFab.subTitle = ''
           if (category) setFab.category = category
           else setFab.category = ''
-          if (filesFab?.length) setFab.images = await uploadImages(client, filesFab)
+
+          if (hasImageChange) {
+            const cur = await client.fetch<{images: Array<Record<string, unknown>> | null} | null>(
+              `*[_id == $id && _type == "fabricationEntry"][0]{ images }`,
+              {id: docId},
+            )
+            if (!cur) {
+              json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+              return
+            }
+            let imgArr = [...(cur.images ?? [])]
+            imgArr = removeByIndices(imgArr, rmImg)
+            if (filesFab?.length) {
+              const up = await uploadImages(client, filesFab)
+              imgArr = [...imgArr, ...up]
+            }
+            if (!imgArr.length) {
+              json(res, 400, {
+                ok: false,
+                error: '이미지는 최소 1장 있어야 합니다. 삭제·추가 후 다시 확인하세요.',
+              })
+              return
+            }
+            setFab.images = imgArr
+          }
+
           await client.patch(docId).set(setFab).commit()
           json(res, 200, {ok: true, id: docId})
           return

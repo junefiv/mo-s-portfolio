@@ -53,6 +53,42 @@ function Field({label, htmlFor, children}: {label: string; htmlFor: string; chil
   )
 }
 
+function ImageThumbWithRemove({
+  url,
+  sideLabel,
+  marked,
+  onToggle,
+}: {
+  url: string
+  sideLabel: string
+  marked: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div
+      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border ${
+        marked ? 'border-destructive opacity-55 ring-2 ring-destructive/40' : 'border-border'
+      }`}
+    >
+      <img src={url} alt="" className="h-full w-full object-cover" />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[11px] font-bold leading-none text-destructive-foreground shadow-md ring-2 ring-background hover:bg-destructive/90"
+        aria-label={marked ? `${sideLabel} 삭제 취소` : `${sideLabel} 이미지 삭제`}
+        title={marked ? '삭제 취소' : '삭제'}
+      >
+        ×
+      </button>
+      {marked ? (
+        <span className="absolute inset-x-0 bottom-0 bg-destructive/90 py-0.5 text-center text-[9px] font-medium text-destructive-foreground">
+          삭제됨
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function SortRow({
   id,
   title,
@@ -123,6 +159,14 @@ function WorkEditForm({
   const [err, setErr] = useState<string | null>(null)
   const [fileKeyL, setFileKeyL] = useState(0)
   const [fileKeyR, setFileKeyR] = useState(0)
+  /** 원본 배열 기준 인덱스 — 서버에 remove_*_indexes 로 전달 */
+  const [rmLeft, setRmLeft] = useState<Set<number>>(() => new Set())
+  const [rmRight, setRmRight] = useState<Set<number>>(() => new Set())
+
+  useEffect(() => {
+    setRmLeft(new Set())
+    setRmRight(new Set())
+  }, [docId])
 
   useEffect(() => {
     let cancelled = false
@@ -153,6 +197,8 @@ function WorkEditForm({
     const form = e.currentTarget
     const fd = new FormData(form)
     fd.set('_id', doc._id)
+    fd.set('remove_left_indexes', [...rmLeft].sort((a, b) => a - b).join(','))
+    fd.set('remove_right_indexes', [...rmRight].sort((a, b) => a - b).join(','))
     setBusy(true)
     try {
       const r = await adminPostMultipart('/api/admin/work-update', fd)
@@ -183,7 +229,11 @@ function WorkEditForm({
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+    <form
+      encType="multipart/form-data"
+      onSubmit={(e) => void handleSubmit(e)}
+      className="space-y-4 rounded-lg border border-border bg-muted/20 p-4"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-foreground">Work 수정</p>
         <button type="button" onClick={onClose} className="text-sm text-muted-foreground underline-offset-4 hover:underline">
@@ -213,20 +263,34 @@ function WorkEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        이미지: 새 파일을 넣은 쪽만 교체됩니다. 비우면 기존 이미지가 유지됩니다.
+        이미지: 썸네일의 ×로 삭제 예약(저장 시 반영). 아래에서 새 파일을 고르면 맨 뒤에 추가됩니다.
       </p>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="min-w-0 space-y-2">
           <p className="text-xs font-medium text-foreground">현재 도면(왼쪽)</p>
-          <div className="flex flex-wrap gap-1">
-            {(doc.imagesLeft ?? [])
-              .map((x) => x?.url)
-              .filter(Boolean)
-              .map((url) => (
-                <img key={url!} src={url!} alt="" className="h-14 w-14 rounded object-cover" />
-              ))}
+          <div className="flex flex-wrap gap-2">
+            {(doc.imagesLeft ?? []).map((slot, i) => {
+              const url = slot?.url
+              if (!url) return null
+              return (
+                <ImageThumbWithRemove
+                  key={`L-${i}`}
+                  url={url}
+                  sideLabel="도면"
+                  marked={rmLeft.has(i)}
+                  onToggle={() => {
+                    setRmLeft((prev) => {
+                      const n = new Set(prev)
+                      if (n.has(i)) n.delete(i)
+                      else n.add(i)
+                      return n
+                    })
+                  }}
+                />
+              )
+            })}
           </div>
-          <Field label="도면 이미지 교체 (선택)" htmlFor={`${formId}-left`}>
+          <Field label="도면 이미지 추가 (선택)" htmlFor={`${formId}-left`}>
             <input
               key={fileKeyL}
               id={`${formId}-left`}
@@ -240,15 +304,29 @@ function WorkEditForm({
         </div>
         <div className="min-w-0 space-y-2">
           <p className="text-xs font-medium text-foreground">현재 작품(오른쪽)</p>
-          <div className="flex flex-wrap gap-1">
-            {(doc.imagesRight ?? [])
-              .map((x) => x?.url)
-              .filter(Boolean)
-              .map((url) => (
-                <img key={url!} src={url!} alt="" className="h-14 w-14 rounded object-cover" />
-              ))}
+          <div className="flex flex-wrap gap-2">
+            {(doc.imagesRight ?? []).map((slot, i) => {
+              const url = slot?.url
+              if (!url) return null
+              return (
+                <ImageThumbWithRemove
+                  key={`R-${i}`}
+                  url={url}
+                  sideLabel="작품"
+                  marked={rmRight.has(i)}
+                  onToggle={() => {
+                    setRmRight((prev) => {
+                      const n = new Set(prev)
+                      if (n.has(i)) n.delete(i)
+                      else n.add(i)
+                      return n
+                    })
+                  }}
+                />
+              )
+            })}
           </div>
-          <Field label="작품 이미지 교체 (선택)" htmlFor={`${formId}-right`}>
+          <Field label="작품 이미지 추가 (선택)" htmlFor={`${formId}-right`}>
             <input
               key={fileKeyR}
               id={`${formId}-right`}

@@ -53,6 +53,40 @@ function Field({label, htmlFor, children}: {label: string; htmlFor: string; chil
   )
 }
 
+function ImageThumbWithRemove({
+  url,
+  marked,
+  onToggle,
+}: {
+  url: string
+  marked: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div
+      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border ${
+        marked ? 'border-destructive opacity-55 ring-2 ring-destructive/40' : 'border-border'
+      }`}
+    >
+      <img src={url} alt="" className="h-full w-full object-cover" />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[11px] font-bold leading-none text-destructive-foreground shadow-md ring-2 ring-background hover:bg-destructive/90"
+        aria-label={marked ? '삭제 취소' : '이미지 삭제'}
+        title={marked ? '삭제 취소' : '삭제'}
+      >
+        ×
+      </button>
+      {marked ? (
+        <span className="absolute inset-x-0 bottom-0 bg-destructive/90 py-0.5 text-center text-[9px] font-medium text-destructive-foreground">
+          삭제됨
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function SortRow({
   id,
   title,
@@ -122,6 +156,11 @@ function FabricationEditForm({
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [fileKey, setFileKey] = useState(0)
+  const [rmImg, setRmImg] = useState<Set<number>>(() => new Set())
+
+  useEffect(() => {
+    setRmImg(new Set())
+  }, [docId])
 
   useEffect(() => {
     let cancelled = false
@@ -152,6 +191,7 @@ function FabricationEditForm({
     const form = e.currentTarget
     const fd = new FormData(form)
     fd.set('_id', doc._id)
+    fd.set('remove_image_indexes', [...rmImg].sort((a, b) => a - b).join(','))
     setBusy(true)
     try {
       const r = await adminPostMultipart('/api/admin/fabrication-update', fd)
@@ -182,7 +222,11 @@ function FabricationEditForm({
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+    <form
+      encType="multipart/form-data"
+      onSubmit={(e) => void handleSubmit(e)}
+      className="space-y-4 rounded-lg border border-border bg-muted/20 p-4"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-foreground">Fabrication 수정</p>
         <button type="button" onClick={onClose} className="text-sm text-muted-foreground underline-offset-4 hover:underline">
@@ -212,18 +256,31 @@ function FabricationEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        이미지: 새 파일을 선택하면 전체 이미지가 교체됩니다. 비우면 기존 이미지가 유지됩니다.
+        이미지: ×로 삭제 예약(저장 시 반영). 새 파일을 고르면 남은 이미지 뒤에 추가됩니다.
       </p>
       <div className="min-w-0 space-y-2">
         <p className="text-xs font-medium text-foreground">현재 이미지</p>
-        <div className="flex flex-wrap gap-1">
-          {(doc.images ?? [])
-            .filter(Boolean)
-            .map((url) => (
-              <img key={url!} src={url!} alt="" className="h-14 w-14 rounded object-cover" />
-            ))}
+        <div className="flex flex-wrap gap-2">
+          {(doc.images ?? []).map((url, i) => {
+            if (!url) return null
+            return (
+              <ImageThumbWithRemove
+                key={`I-${i}`}
+                url={url}
+                marked={rmImg.has(i)}
+                onToggle={() => {
+                  setRmImg((prev) => {
+                    const n = new Set(prev)
+                    if (n.has(i)) n.delete(i)
+                    else n.add(i)
+                    return n
+                  })
+                }}
+              />
+            )
+          })}
         </div>
-        <Field label="이미지 교체 (선택)" htmlFor={`${formId}-img`}>
+        <Field label="이미지 추가 (선택)" htmlFor={`${formId}-img`}>
           <input
             key={fileKey}
             id={`${formId}-img`}
