@@ -232,6 +232,12 @@ function normalizeReorderIds(body: unknown): string[] | null {
   return out.length ? out : null
 }
 
+function normalizeId(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return null
+  const id = (body as {id?: unknown}).id
+  return typeof id === 'string' && id.trim().length > 0 ? id.trim() : null
+}
+
 async function applyReorderRanks(
   client: SanityClient,
   ids: string[],
@@ -358,6 +364,107 @@ export class PortfolioAdminApi {
         return
       }
 
+      if (pathname === '/api/admin/work-fetch' || pathname === '/api/admin/fabrication-fetch') {
+        const body = (await readJsonBody(req)) as Record<string, unknown> | null
+        if (!verifySecret(req, adminEnv, body ?? undefined)) {
+          json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+          return
+        }
+        const docId = normalizeId(body)
+        if (!docId) {
+          json(res, 400, {ok: false, error: 'JSON { "id": string } 가 필요합니다.'})
+          return
+        }
+        try {
+          if (pathname === '/api/admin/work-fetch') {
+            const doc = await client.fetch<
+              | {
+                  _id: string
+                  projectNo: number | null
+                  title: string | null
+                  subTitle: string | null
+                  body: string | null
+                  imagesLeft: Array<{url: string | null} | null> | null
+                  imagesRight: Array<{url: string | null} | null> | null
+                }
+              | null
+            >(
+              `*[_id == $id && _type == "workProject"][0]{
+                _id, projectNo, title, subTitle, body,
+                "imagesLeft": imagesLeft[]{ "url": asset->url },
+                "imagesRight": imagesRight[]{ "url": asset->url }
+              }`,
+              {id: docId},
+            )
+            if (!doc) {
+              json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+              return
+            }
+            json(res, 200, {ok: true, doc})
+            return
+          }
+          const doc = await client.fetch<
+            | {
+                _id: string
+                year: string | null
+                title: string | null
+                subTitle: string | null
+                category: string | null
+                body: string | null
+                images: (string | null)[] | null
+              }
+            | null
+          >(
+            `*[_id == $id && _type == "fabricationEntry"][0]{
+              _id, year, title, subTitle, category, body,
+              "images": images[].asset->url
+            }`,
+            {id: docId},
+          )
+          if (!doc) {
+            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            return
+          }
+          json(res, 200, {ok: true, doc})
+          return
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          json(res, 500, {ok: false, error: formatSanityClientError(msg)})
+          return
+        }
+      }
+
+      if (pathname === '/api/admin/work-delete' || pathname === '/api/admin/fabrication-delete') {
+        const body = (await readJsonBody(req)) as Record<string, unknown> | null
+        if (!verifySecret(req, adminEnv, body ?? undefined)) {
+          json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+          return
+        }
+        const docId = normalizeId(body)
+        if (!docId) {
+          json(res, 400, {ok: false, error: 'JSON { "id": string } 가 필요합니다.'})
+          return
+        }
+        try {
+          const tp = pathname === '/api/admin/work-delete' ? 'workProject' : 'fabricationEntry'
+          const exists = await client.fetch<string | null>(
+            `*[_id == $id && _type == $tp][0]._id`,
+            {id: docId, tp},
+          )
+          if (!exists) {
+            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            return
+          }
+          await client.delete(docId)
+          json(res, 200, {ok: true})
+          return
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          json(res, 500, {ok: false, error: formatSanityClientError(msg)})
+          return
+        }
+      }
+
       if (pathname === '/api/admin/work-reorder' || pathname === '/api/admin/fabrication-reorder') {
         const body = (await readJsonBody(req)) as Record<string, unknown> | null
         if (!verifySecret(req, adminEnv, body ?? undefined)) {
@@ -378,7 +485,9 @@ export class PortfolioAdminApi {
       if (
         pathname === '/api/admin/news' ||
         pathname === '/api/admin/work' ||
-        pathname === '/api/admin/fabrication'
+        pathname === '/api/admin/fabrication' ||
+        pathname === '/api/admin/work-update' ||
+        pathname === '/api/admin/fabrication-update'
       ) {
         const parseMultipart = (
           rq: IncomingMessage,
@@ -388,7 +497,7 @@ export class PortfolioAdminApi {
           const reqM = rq as MReq
           const resM = rs as ServerResponse
           if (pathname === '/api/admin/news') this.getNewsMulter()(reqM as never, resM as never, cb)
-          else if (pathname === '/api/admin/work')
+          else if (pathname === '/api/admin/work' || pathname === '/api/admin/work-update')
             this.getWorkMulter()(reqM as never, resM as never, cb)
           else this.getFabMulter()(reqM as never, resM as never, cb)
         }
@@ -465,35 +574,118 @@ export class PortfolioAdminApi {
           return
         }
 
-        const year = firstField(body, 'year')
-        const title = firstField(body, 'title')
-        const subTitle = firstField(body, 'sub_title')
-        const category = firstField(body, 'category')
-        const textBody = firstField(body, 'body')
-        const files = rq.files as UploadedFile[] | undefined
-        if (!year || !title || !textBody) {
-          json(res, 400, {ok: false, error: 'year, title, body는 필수입니다.'})
+        if (pathname === '/api/admin/work-update') {
+          const docId = firstField(body, '_id')
+          if (!docId) {
+            json(res, 400, {ok: false, error: '_id 가 필요합니다.'})
+            return
+          }
+          const exists = await client.fetch<string | null>(
+            `*[_id == $id && _type == "workProject"][0]._id`,
+            {id: docId},
+          )
+          if (!exists) {
+            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            return
+          }
+          const title = firstField(body, 'title')
+          const subTitle = firstField(body, 'sub_title')
+          const textBody = firstField(body, 'body')
+          if (!title || !textBody) {
+            json(res, 400, {ok: false, error: 'title, body는 필수입니다.'})
+            return
+          }
+          const fileMap = rq.files as {[fieldname: string]: UploadedFile[]} | undefined
+          const left = fileMap?.imagesLeft
+          const right = fileMap?.imagesRight
+          const setDoc: Record<string, unknown> = {
+            title,
+            body: textBody,
+            slug: {_type: 'slug', current: makeSlug(title)},
+          }
+          if (subTitle) setDoc.subTitle = subTitle
+          else setDoc.subTitle = ''
+          if (left?.length) setDoc.imagesLeft = await uploadImages(client, left)
+          if (right?.length) setDoc.imagesRight = await uploadImages(client, right)
+          await client.patch(docId).set(setDoc).commit()
+          json(res, 200, {ok: true, id: docId})
           return
         }
-        if (!files?.length) {
-          json(res, 400, {ok: false, error: '이미지를 1장 이상 선택하세요.'})
+
+        if (pathname === '/api/admin/fabrication') {
+          const year = firstField(body, 'year')
+          const title = firstField(body, 'title')
+          const subTitle = firstField(body, 'sub_title')
+          const category = firstField(body, 'category')
+          const textBody = firstField(body, 'body')
+          const files = rq.files as UploadedFile[] | undefined
+          if (!year || !title || !textBody) {
+            json(res, 400, {ok: false, error: 'year, title, body는 필수입니다.'})
+            return
+          }
+          if (!files?.length) {
+            json(res, 400, {ok: false, error: '이미지를 1장 이상 선택하세요.'})
+            return
+          }
+          const images = await uploadImages(client, files)
+          const slug = makeSlug(title)
+          const sortNo = await nextFabricationSortNo(client)
+          const doc = await client.create({
+            _type: 'fabricationEntry',
+            year,
+            title,
+            slug: {_type: 'slug', current: slug},
+            subTitle: subTitle || undefined,
+            category: category || undefined,
+            body: textBody,
+            images,
+            sortNo,
+          })
+          json(res, 200, {ok: true, id: doc._id})
           return
         }
-        const images = await uploadImages(client, files)
-        const slug = makeSlug(title)
-        const sortNo = await nextFabricationSortNo(client)
-        const doc = await client.create({
-          _type: 'fabricationEntry',
-          year,
-          title,
-          slug: {_type: 'slug', current: slug},
-          subTitle: subTitle || undefined,
-          category: category || undefined,
-          body: textBody,
-          images,
-          sortNo,
-        })
-        json(res, 200, {ok: true, id: doc._id})
+
+        if (pathname === '/api/admin/fabrication-update') {
+          const docId = firstField(body, '_id')
+          if (!docId) {
+            json(res, 400, {ok: false, error: '_id 가 필요합니다.'})
+            return
+          }
+          const exists = await client.fetch<string | null>(
+            `*[_id == $id && _type == "fabricationEntry"][0]._id`,
+            {id: docId},
+          )
+          if (!exists) {
+            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            return
+          }
+          const year = firstField(body, 'year')
+          const title = firstField(body, 'title')
+          const subTitle = firstField(body, 'sub_title')
+          const category = firstField(body, 'category')
+          const textBody = firstField(body, 'body')
+          if (!year || !title || !textBody) {
+            json(res, 400, {ok: false, error: 'year, title, body는 필수입니다.'})
+            return
+          }
+          const filesFab = rq.files as UploadedFile[] | undefined
+          const setFab: Record<string, unknown> = {
+            year,
+            title,
+            body: textBody,
+            slug: {_type: 'slug', current: makeSlug(title)},
+          }
+          if (subTitle) setFab.subTitle = subTitle
+          else setFab.subTitle = ''
+          if (category) setFab.category = category
+          else setFab.category = ''
+          if (filesFab?.length) setFab.images = await uploadImages(client, filesFab)
+          await client.patch(docId).set(setFab).commit()
+          json(res, 200, {ok: true, id: docId})
+          return
+        }
+
+        json(res, 404, {ok: false, error: 'Unknown multipart route'})
         return
       }
 

@@ -67,6 +67,32 @@ export async function adminGetJson<T extends Record<string, unknown>>(
   return {ok: true, data}
 }
 
+/** POST 후 JSON 전체를 data 로 돌려줄 때(예: work-fetch 응답의 doc) */
+export async function adminPostJsonData<T extends Record<string, unknown>>(
+  path: string,
+  body: unknown,
+): Promise<{ok: boolean; data?: T; error?: string}> {
+  const secret = getStoredAdminSecret()
+  if (!secret) return {ok: false, error: '시크릿으로 먼저 로그인하세요.'}
+  const res = await fetch(adminApiUrl(path), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      [SESSION_HEADER]: secret,
+    },
+    body: JSON.stringify(body),
+  })
+  let data = {} as T & {ok?: boolean; error?: string}
+  try {
+    data = (await res.json()) as T & {ok?: boolean; error?: string}
+  } catch {
+    return {ok: false, error: ADMIN_NON_JSON_HINT}
+  }
+  if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
+  if (data.ok !== true) return {ok: false, error: data.error ?? '요청 실패'}
+  return {ok: true, data}
+}
+
 export async function adminPostJson(
   path: string,
   body: unknown,

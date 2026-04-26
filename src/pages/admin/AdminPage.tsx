@@ -172,7 +172,7 @@ export default function AdminPage() {
                 {(
                   [
                     ['new', '새 등록'],
-                    ['archive', '아카이브 · 순서'],
+                    ['archive', '아카이브 · 에디트'],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -202,7 +202,7 @@ export default function AdminPage() {
                 {(
                   [
                     ['new', '새 등록'],
-                    ['archive', '아카이브 · 순서'],
+                    ['archive', '아카이브 · 에디트'],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -334,7 +334,7 @@ function WorkForm() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
       <p className="text-sm text-muted-foreground">
-        정렬 번호는 서버에서 자동 부여됩니다. 순서는 Work →「아카이브 · 순서」에서 드래그로 바꿀 수 있습니다.
+        정렬 번호는 서버에서 자동 부여됩니다. 순서·내용·이미지는 Work →「아카이브 · 에디트」에서 바꿀 수 있습니다.
       </p>
       <Field label="제목" htmlFor={`${id}-title`}>
         <input id={`${id}-title`} name="title" required className={fieldClass} />
@@ -417,8 +417,8 @@ function FabricationForm() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
       <p className="text-sm text-muted-foreground">
-        목록 순서는 자동으로 맨 위에 쌓이게 부여됩니다. 순서 변경은 Fabrication →「아카이브 · 순서」에서
-        드래그하세요.
+        목록 순서는 자동으로 맨 위에 쌓이게 부여됩니다. 순서·내용·이미지는 Fabrication →「아카이브 · 에디트」에서
+        바꿀 수 있습니다.
       </p>
       <Field label="연도 (year)" htmlFor={`${id}-year`}>
         <input id={`${id}-year`} name="year" required className={fieldClass} placeholder="2026" />

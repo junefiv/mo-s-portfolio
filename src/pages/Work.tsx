@@ -222,7 +222,7 @@ export default function Work() {
     void loadProjects()
   }, [loadProjects])
 
-  /** 다른 탭에서 아카이브 순서 저장 후 돌아올 때 목록 갱신 */
+  /** 다른 탭에서 아카이브 에디트 저장 후 돌아올 때 목록 갱신 */
   useEffect(() => {
     const onVis = () => {
       if (document.visibilityState === 'visible') void loadProjects()
