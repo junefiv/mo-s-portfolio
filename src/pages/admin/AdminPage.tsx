@@ -7,6 +7,7 @@ import {
   getStoredAdminSecret,
   setStoredAdminSecret,
 } from '@/lib/adminApi'
+import AdminToastListener from './AdminToastListener'
 import FabricationArchivePanel from './FabricationArchivePanel'
 import WorkArchivePanel from './WorkArchivePanel'
 
@@ -61,6 +62,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-w-0 px-6 pt-20 pb-16">
+      <AdminToastListener />
       <div className="mx-auto w-full min-w-0 max-w-page py-10">
         <div className="mb-8 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">

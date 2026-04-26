@@ -20,11 +20,14 @@ import {
   useCallback,
   useEffect,
   useId,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
 } from 'react'
 import {adminGetJson, adminPostJson, adminPostJsonData, adminPostMultipart} from '@/lib/adminApi'
+import {showAdminToast} from '@/lib/adminToast'
+import {AddImageButton, newPendingFromFileList, PendingImageThumb, type PendingSlot} from './adminArchiveImagePick'
 
 type Row = {_id: string; title: string | null; sortNo: number | null}
 
@@ -40,7 +43,6 @@ type FabDoc = {
 
 const fieldClass =
   'min-w-0 w-full rounded-md border border-border bg-[var(--input-background)] px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40'
-const fileInputClass = `${fieldClass} py-2 file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium`
 
 function Field({label, htmlFor, children}: {label: string; htmlFor: string; children: ReactNode}) {
   return (
@@ -153,13 +155,23 @@ function FabricationEditForm({
   const [doc, setDoc] = useState<FabDoc | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
-  const [fileKey, setFileKey] = useState(0)
   const [rmImg, setRmImg] = useState<Set<number>>(() => new Set())
+  const [pending, setPending] = useState<PendingSlot[]>([])
+  const pendingReleaseRef = useRef<PendingSlot[]>([])
+  pendingReleaseRef.current = pending
+
+  useEffect(() => {
+    return () => {
+      pendingReleaseRef.current.forEach((p) => URL.revokeObjectURL(p.url))
+    }
+  }, [])
 
   useEffect(() => {
     setRmImg(new Set())
+    setPending((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.url))
+      return []
+    })
   }, [docId])
 
   useEffect(() => {
@@ -183,24 +195,33 @@ function FabricationEditForm({
     }
   }, [docId])
 
+  const clearPending = () => {
+    setPending((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.url))
+      return []
+    })
+  }
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!doc) return
-    setMsg(null)
-    setErr(null)
     const form = e.currentTarget
     const fd = new FormData(form)
+    fd.delete('images')
+    for (const p of pending) fd.append('images', p.file)
     fd.set('_id', doc._id)
     fd.set('remove_image_indexes', [...rmImg].sort((a, b) => a - b).join(','))
     setBusy(true)
     try {
       const r = await adminPostMultipart('/api/admin/fabrication-update', fd)
       if (r.ok) {
-        setMsg('저장했습니다.')
+        showAdminToast('저장이 완료되었습니다.', 'success')
         onSaved()
       } else {
-        setErr(r.error ?? '저장 실패')
+        showAdminToast(r.error ?? '저장에 실패했습니다.', 'error')
       }
+    } catch {
+      showAdminToast('네트워크 오류로 저장에 실패했습니다.', 'error')
     } finally {
       setBusy(false)
     }
@@ -256,10 +277,11 @@ function FabricationEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        이미지: ×로 삭제 예약(저장 시 반영). 새 파일을 고르면 남은 이미지 뒤에 추가됩니다.
+        이미지: 기존 썸네일 ×는 삭제 예약(저장 시 반영). + 로 파일을 고르면 맨 뒤에 추가됩니다. 녹색 테두리는 아직 저장
+        전입니다.
       </p>
       <div className="min-w-0 space-y-2">
-        <p className="text-xs font-medium text-foreground">현재 이미지</p>
+        <p className="text-xs font-medium text-foreground">이미지</p>
         <div className="flex flex-wrap gap-2">
           {(doc.images ?? []).map((url, i) => {
             if (!url) return null
@@ -279,18 +301,27 @@ function FabricationEditForm({
               />
             )
           })}
-        </div>
-        <Field label="이미지 추가 (선택)" htmlFor={`${formId}-img`}>
-          <input
-            key={fileKey}
-            id={`${formId}-img`}
-            name="images"
-            type="file"
-            accept="image/*"
-            multiple
-            className={fileInputClass}
+          {pending.map((p) => (
+            <PendingImageThumb
+              key={p.id}
+              url={p.url}
+              caption="이미지"
+              onRemove={() => {
+                setPending((prev) => {
+                  const i = prev.findIndex((x) => x.id === p.id)
+                  if (i < 0) return prev
+                  URL.revokeObjectURL(prev[i].url)
+                  return prev.filter((_, j) => j !== i)
+                })
+              }}
+            />
+          ))}
+          <AddImageButton
+            inputId={`${formId}-pick-img`}
+            label="이미지 추가"
+            onFiles={(files) => setPending((prev) => [...prev, ...newPendingFromFileList(files)])}
           />
-        </Field>
+        </div>
       </div>
       <div className="flex flex-wrap gap-2">
         <button
@@ -300,23 +331,16 @@ function FabricationEditForm({
         >
           {busy ? '저장 중…' : '저장'}
         </button>
-        <button type="button" onClick={() => setFileKey((k) => k + 1)} className="rounded-md border border-border px-3 py-2 text-sm">
-          파일 선택 초기화
+        <button type="button" onClick={clearPending} className="rounded-md border border-border px-3 py-2 text-sm">
+          추가한 파일 모두 취소
         </button>
       </div>
-      {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
-      {err ? (
-        <p className="text-sm text-destructive" role="alert">
-          {err}
-        </p>
-      ) : null}
     </form>
   )
 }
 
 export default function FabricationArchivePanel() {
   const [items, setItems] = useState<Row[]>([])
-  const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -354,30 +378,32 @@ export default function FabricationArchivePanel() {
     const prev = items
     const next = arrayMove(items, oldIndex, newIndex)
     setItems(next)
-    setMsg(null)
     setErr(null)
     const save = await adminPostJson('/api/admin/fabrication-reorder', {
       ids: next.map((x) => x._id),
     })
     if (!save.ok) {
-      setErr(save.error ?? '순서 저장 실패')
+      const why = save.error ?? '순서 저장 실패'
+      setErr(why)
+      showAdminToast(why, 'error')
       setItems(prev)
     } else {
-      setMsg('순서를 저장했습니다.')
+      showAdminToast('순서를 저장했습니다.', 'success')
     }
   }
 
   const onDelete = async (id: string, title: string) => {
     if (!window.confirm(`「${title}」을(를) 삭제할까요? Sanity에서 완전히 지워집니다.`)) return
     setErr(null)
-    setMsg(null)
     const r = await adminPostJson('/api/admin/fabrication-delete', {id})
     if (!r.ok) {
-      setErr(r.error ?? '삭제 실패')
+      const why = r.error ?? '삭제 실패'
+      setErr(why)
+      showAdminToast(why, 'error')
       return
     }
     if (editingId === id) setEditingId(null)
-    setMsg('삭제했습니다.')
+    showAdminToast('삭제했습니다.', 'success')
     void load()
   }
 
@@ -419,7 +445,6 @@ export default function FabricationArchivePanel() {
           </SortableContext>
         </DndContext>
       )}
-      {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (
         <p className="text-sm text-destructive" role="alert">
           {err}
