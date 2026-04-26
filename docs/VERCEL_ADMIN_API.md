@@ -1,6 +1,6 @@
 # GitHub Pages + Vercel(무료)로 배포된 `/admin` 쓰기
 
-GitHub Pages는 **정적 파일만** 올라가서 `/api/admin` 이 없습니다. 이 레포는 **같은 코드의 관리 API**를 Vercel Serverless(`api/admin/[path].ts`)로 올릴 수 있게 되어 있습니다.
+GitHub Pages는 **정적 파일만** 올라가서 `/api/admin` 이 없습니다. 이 레포는 **같은 코드의 관리 API**를 Vercel Serverless(`api/admin/[path].ts` + `api/lib/portfolioAdminHandler.ts`)로 올릴 수 있게 되어 있습니다.
 
 ## 전체 흐름
 

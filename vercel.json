@@ -2,20 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node scripts/vercel-admin-api-build.mjs",
   "outputDirectory": "dist",
-  "headers": [
-    {
-      "source": "/api/admin/(.*)",
-      "headers": [
-        {"key": "Access-Control-Allow-Origin", "value": "*"},
-        {"key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS"},
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, x-admin-secret, X-Admin-Secret"
-        },
-        {"key": "Access-Control-Max-Age", "value": "86400"}
-      ]
-    }
-  ],
   "functions": {
     "api/admin/[path].ts": {
       "maxDuration": 10

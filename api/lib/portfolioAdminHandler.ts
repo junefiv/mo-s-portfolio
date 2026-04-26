@@ -1,5 +1,6 @@
 /**
  * 포트폴리오 관리 API — Vite dev 미들웨어와 Vercel Serverless에서 공통 사용.
+ * Vercel은 `api/` 트리 밖 파일 번들을 누락할 수 있어 `api/lib/` 에 둡니다.
  */
 import {randomBytes} from 'node:crypto'
 import type {IncomingMessage, ServerResponse} from 'node:http'
@@ -107,7 +108,8 @@ function json(res: ServerResponse, status: number, body: Record<string, unknown>
 function corsOptions(res: ServerResponse) {
   attachAdminApiCorsHeaders(res)
   res.setHeader('Access-Control-Max-Age', '86400')
-  res.statusCode = 204
+  // 일부 환경에서 204 프리플라이트가 "ok"로 인정되지 않는 경우가 있어 200 사용
+  res.statusCode = 200
   res.end()
 }
 
@@ -205,6 +207,9 @@ function memUpload() {
   })
 }
 
+/** multer 타입은 Express Request 를 기대하지만 런타임은 Node IncomingMessage 와 호환 */
+type MulterMw = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => void
+
 async function nextProjectNo(client: SanityClient): Promise<number> {
   const max = await client.fetch<number>(
     `coalesce(*[_type == "workProject"] | order(projectNo desc)[0].projectNo, 0)`,
@@ -250,16 +255,37 @@ type MReq = IncomingMessage & {
 }
 
 export class PortfolioAdminApi {
-  private readonly uploadNews = memUpload().array('images', 30)
-  private readonly uploadWork = memUpload().fields([
-    {name: 'imagesLeft', maxCount: 30},
-    {name: 'imagesRight', maxCount: 30},
-  ])
-  private readonly uploadFab = memUpload().array('images', 30)
+  private uploadNewsMw: MulterMw | null = null
+  private uploadWorkMw: MulterMw | null = null
+  private uploadFabMw: MulterMw | null = null
   private readonly getLoad: () => AdminEnvLoad
 
   constructor(getLoad: () => AdminEnvLoad) {
     this.getLoad = getLoad
+  }
+
+  private getNewsMulter(): MulterMw {
+    if (!this.uploadNewsMw) {
+      this.uploadNewsMw = memUpload().array('images', 30) as MulterMw
+    }
+    return this.uploadNewsMw
+  }
+
+  private getWorkMulter(): MulterMw {
+    if (!this.uploadWorkMw) {
+      this.uploadWorkMw = memUpload().fields([
+        {name: 'imagesLeft', maxCount: 30},
+        {name: 'imagesRight', maxCount: 30},
+      ]) as MulterMw
+    }
+    return this.uploadWorkMw
+  }
+
+  private getFabMulter(): MulterMw {
+    if (!this.uploadFabMw) {
+      this.uploadFabMw = memUpload().array('images', 30) as MulterMw
+    }
+    return this.uploadFabMw
   }
 
   /** pathname 예: `/api/admin/auth` (base 경로 제거 후) */
@@ -361,10 +387,10 @@ export class PortfolioAdminApi {
         ) => {
           const reqM = rq as MReq
           const resM = rs as ServerResponse
-          if (pathname === '/api/admin/news') this.uploadNews(reqM as never, resM as never, cb)
+          if (pathname === '/api/admin/news') this.getNewsMulter()(reqM as never, resM as never, cb)
           else if (pathname === '/api/admin/work')
-            this.uploadWork(reqM as never, resM as never, cb)
-          else this.uploadFab(reqM as never, resM as never, cb)
+            this.getWorkMulter()(reqM as never, resM as never, cb)
+          else this.getFabMulter()(reqM as never, resM as never, cb)
         }
         await runMulter(req, res, parseMultipart)
 
