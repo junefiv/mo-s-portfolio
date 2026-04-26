@@ -87,20 +87,27 @@ function clientFromEnv(e: AdminEnv): SanityClient {
   })
 }
 
+/** GitHub Pages 등 다른 오리진에서 fetch 할 때 CORS 프리플라이트·본응답에 필요 */
+export function attachAdminApiCorsHeaders(res: ServerResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    `Content-Type, ${SESSION_HEADER}, X-Admin-Secret`,
+  )
+}
+
 function json(res: ServerResponse, status: number, body: Record<string, unknown>) {
   res.statusCode = status
+  attachAdminApiCorsHeaders(res)
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Headers', `Content-Type, ${SESSION_HEADER}`)
   res.end(JSON.stringify(body))
 }
 
 function corsOptions(res: ServerResponse) {
-  res.statusCode = 204
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', `Content-Type, ${SESSION_HEADER}`)
+  attachAdminApiCorsHeaders(res)
   res.setHeader('Access-Control-Max-Age', '86400')
+  res.statusCode = 204
   res.end()
 }
 
