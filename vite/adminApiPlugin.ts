@@ -1,6 +1,6 @@
 import type {IncomingMessage, ServerResponse} from 'node:http'
 import {loadEnv, type Plugin} from 'vite'
-import {parsePortfolioAdminEnv, PortfolioAdminApi, type AdminEnvLoad} from '../api/lib/portfolioAdminHandler'
+import {parsePortfolioAdminEnv, PortfolioAdminApi, type AdminEnvLoad} from '../api/admin/portfolioAdminHandler.ts'
 
 export function adminApiPlugin(): Plugin {
   let adminLoad: AdminEnvLoad | null = null

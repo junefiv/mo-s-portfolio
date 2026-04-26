@@ -1,6 +1,6 @@
 /**
  * 포트폴리오 관리 API — Vite dev 미들웨어와 Vercel Serverless에서 공통 사용.
- * Vercel은 `api/` 트리 밖 파일 번들을 누락할 수 있어 `api/lib/` 에 둡니다.
+ * `[path].ts` 와 같은 폴더에 두고, Vercel 번들에 포함되도록 함.
  */
 import {randomBytes} from 'node:crypto'
 import type {IncomingMessage, ServerResponse} from 'node:http'

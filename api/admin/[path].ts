@@ -7,7 +7,7 @@ import {
   attachAdminApiCorsHeaders,
   parsePortfolioAdminEnv,
   PortfolioAdminApi,
-} from '../lib/portfolioAdminHandler'
+} from './portfolioAdminHandler.js'
 
 let api: PortfolioAdminApi | null = null
 function getApi(): PortfolioAdminApi {
