@@ -27,7 +27,6 @@ import {
 } from 'react'
 import {adminGetJson, adminPostJson, adminPostJsonData, adminPostMultipart} from '@/lib/adminApi'
 import {showAdminToast} from '@/lib/adminToast'
-import {compressFileForAdminUpload} from '@/lib/compressImagesForAdminUpload'
 import {AddImageButton, newPendingFromFileList, PendingImageThumb, type PendingSlot} from './adminArchiveImagePick'
 
 type Row = {_id: string; title: string | null; projectNo: number | null}
@@ -237,19 +236,11 @@ function WorkEditForm({
     fd.append('body', body)
     fd.append('remove_left_indexes', [...rmLeft].sort((a, b) => a - b).join(','))
     fd.append('remove_right_indexes', [...rmRight].sort((a, b) => a - b).join(','))
-    try {
-      for (const p of pendingLeftSubmitRef.current) {
-        const f = await compressFileForAdminUpload(p.file)
-        fd.append('imagesLeft', f, f.name || 'image.jpg')
-      }
-      for (const p of pendingRightSubmitRef.current) {
-        const f = await compressFileForAdminUpload(p.file)
-        fd.append('imagesRight', f, f.name || 'image.jpg')
-      }
-    } catch {
-      setBusy(false)
-      showAdminToast('이미지 처리에 실패했습니다.', 'error')
-      return
+    for (const p of pendingLeftSubmitRef.current) {
+      fd.append('imagesLeft', p.file, p.file.name || 'image.jpg')
+    }
+    for (const p of pendingRightSubmitRef.current) {
+      fd.append('imagesRight', p.file, p.file.name || 'image.jpg')
     }
     try {
       const r = await adminPostMultipart('/api/admin/work-update', fd)

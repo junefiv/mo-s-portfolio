@@ -200,10 +200,11 @@ function runMulter(
   })
 }
 
+/** 플랫폼(Vercel 요청 본문·함수 메모리) 한도는 여전히 적용됨 */
 function memUpload() {
   return multer({
     storage: multer.memoryStorage(),
-    limits: {fileSize: 20 * 1024 * 1024, files: 40},
+    limits: {fileSize: 100 * 1024 * 1024, files: 500},
   })
 }
 
@@ -292,7 +293,7 @@ export class PortfolioAdminApi {
 
   private getNewsMulter(): MulterMw {
     if (!this.uploadNewsMw) {
-      this.uploadNewsMw = memUpload().array('images', 30) as MulterMw
+      this.uploadNewsMw = memUpload().array('images', 200) as MulterMw
     }
     return this.uploadNewsMw
   }
@@ -300,8 +301,8 @@ export class PortfolioAdminApi {
   private getWorkMulter(): MulterMw {
     if (!this.uploadWorkMw) {
       this.uploadWorkMw = memUpload().fields([
-        {name: 'imagesLeft', maxCount: 30},
-        {name: 'imagesRight', maxCount: 30},
+        {name: 'imagesLeft', maxCount: 200},
+        {name: 'imagesRight', maxCount: 200},
       ]) as MulterMw
     }
     return this.uploadWorkMw
@@ -309,7 +310,7 @@ export class PortfolioAdminApi {
 
   private getFabMulter(): MulterMw {
     if (!this.uploadFabMw) {
-      this.uploadFabMw = memUpload().array('images', 30) as MulterMw
+      this.uploadFabMw = memUpload().array('images', 200) as MulterMw
     }
     return this.uploadFabMw
   }

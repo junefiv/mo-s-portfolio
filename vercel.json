@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/admin/[path].ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   }
 }

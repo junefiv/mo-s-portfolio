@@ -7,7 +7,6 @@ import {
   getStoredAdminSecret,
   setStoredAdminSecret,
 } from '@/lib/adminApi'
-import {formDataWithCompressedImages} from '@/lib/compressImagesForAdminUpload'
 import AdminToastListener from './AdminToastListener'
 import FabricationArchivePanel from './FabricationArchivePanel'
 import WorkArchivePanel from './WorkArchivePanel'
@@ -243,7 +242,7 @@ function NewsForm() {
     setErr(null)
     setBusy(true)
     try {
-      const fd = await formDataWithCompressedImages(new FormData(form))
+      const fd = new FormData(form)
       const r = await adminPostMultipart('/api/admin/news', fd)
       if (r.ok) {
         setMsg(`저장됨${r.id ? ` (id: ${r.id})` : ''}`)
@@ -311,7 +310,7 @@ function WorkForm() {
     setErr(null)
     setBusy(true)
     try {
-      const fd = await formDataWithCompressedImages(new FormData(form))
+      const fd = new FormData(form)
       const r = await adminPostMultipart('/api/admin/work', fd)
       if (r.ok) {
         setMsg(`저장됨${r.id ? ` (id: ${r.id})` : ''}`)
@@ -394,7 +393,7 @@ function FabricationForm() {
     setErr(null)
     setBusy(true)
     try {
-      const fd = await formDataWithCompressedImages(new FormData(form))
+      const fd = new FormData(form)
       const r = await adminPostMultipart('/api/admin/fabrication', fd)
       if (r.ok) {
         setMsg(`저장됨${r.id ? ` (id: ${r.id})` : ''}`)
