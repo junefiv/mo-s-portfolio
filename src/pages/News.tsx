@@ -23,7 +23,7 @@ function mapSanityToItems(rows: SanityNewsPost[]): NewsItem[] {
 
 function formatNewsDate(iso: string) {
   const d = new Date(`${iso}T12:00:00`)
-  return d.toLocaleDateString('ko-KR', {
+  return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -47,7 +47,7 @@ export default function News() {
         if (!cancelled) {
           const msg = e instanceof Error ? e.message : String(e)
           setError(
-            `${msg} — 브라우저에서 Sanity API를 쓰려면 sanity.io/manage → API → CORS origins에 이 사이트 주소(예: http://localhost:5173)를 등록했는지 확인하세요.`,
+            `${msg} — If you are fetching from the browser, check sanity.io/manage → API → CORS origins and make sure this site's origin (e.g. http://localhost:5173) is added.`,
           )
         }
       } finally {
@@ -65,14 +65,14 @@ export default function News() {
        
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">불러오는 중…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         ) : error ? (
           <p className="max-w-prose text-sm leading-relaxed text-destructive" role="alert">
             {error}
           </p>
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            등록된 뉴스가 없습니다. /admin 에서 newsPost를 추가하거나 Studio에서 확인하세요.
+            No news has been published yet. Add a `newsPost` in `/admin` or check it in Studio.
           </p>
         ) : (
           <ul className="grid min-w-0 list-none grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-5">
@@ -93,7 +93,7 @@ export default function News() {
                         className="flex h-full w-full items-center justify-center text-xs text-muted-foreground"
                         aria-hidden
                       >
-                        이미지 없음
+                        No image
                       </div>
                     )}
                   </div>

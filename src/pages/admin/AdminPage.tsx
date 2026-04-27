@@ -46,7 +46,7 @@ export default function AdminPage() {
           setAuthed(true)
           setLoginSecret('')
         } else {
-          setLoginErr(r.error ?? '로그인 실패')
+          setLoginErr(r.error ?? 'Login failed')
         }
       } finally {
         setLoginBusy(false)
@@ -67,7 +67,7 @@ export default function AdminPage() {
         <div className="mb-8 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              콘텐츠 등록
+              Content Admin
             </h1>
             
           </div>
@@ -84,7 +84,7 @@ export default function AdminPage() {
                 onClick={onLogout}
                 className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
               >
-                로그아웃
+                Log out
               </button>
             ) : null}
           </div>
@@ -96,7 +96,7 @@ export default function AdminPage() {
             className="mx-auto max-w-md space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm"
           >
             <label htmlFor={`${baseId}-secret`} className={labelClass}>
-              관리 시크릿
+              Admin secret
             </label>
             <input
               id={`${baseId}-secret`}
@@ -105,7 +105,7 @@ export default function AdminPage() {
               value={loginSecret}
               onChange={(e) => setLoginSecret(e.target.value)}
               className={fieldClass}
-              placeholder="PORTFOLIO_ADMIN_SECRET와 동일한 값"
+              placeholder="Same value as PORTFOLIO_ADMIN_SECRET"
               required
             />
             {loginErr ? (
@@ -118,14 +118,14 @@ export default function AdminPage() {
               disabled={loginBusy}
               className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-60"
             >
-              {loginBusy ? '확인 중…' : '확인'}
+              {loginBusy ? 'Checking…' : 'Confirm'}
             </button>
           </form>
         ) : (
           <div className="min-w-0 space-y-8">
             <div
               role="tablist"
-              aria-label="등록 종류"
+              aria-label="Content sections"
               className="flex min-w-0 flex-wrap gap-2 border-b border-border pb-3"
             >
               {(
@@ -159,13 +159,13 @@ export default function AdminPage() {
             {tab === 'work' ? (
               <div
                 role="tablist"
-                aria-label="Work 하위 메뉴"
+                aria-label="Work submenu"
                 className="flex min-w-0 flex-wrap gap-2 border-b border-border pb-3"
               >
                 {(
                   [
-                    ['new', '새 등록'],
-                    ['archive', '아카이브 · 에디트'],
+                    ['new', 'New'],
+                    ['archive', 'Archive · Edit'],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -189,13 +189,13 @@ export default function AdminPage() {
             {tab === 'fabrication' ? (
               <div
                 role="tablist"
-                aria-label="Fabrication 하위 메뉴"
+                aria-label="Fabrication submenu"
                 className="flex min-w-0 flex-wrap gap-2 border-b border-border pb-3"
               >
                 {(
                   [
-                    ['new', '새 등록'],
-                    ['archive', '아카이브 · 에디트'],
+                    ['new', 'New'],
+                    ['archive', 'Archive · Edit'],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -245,11 +245,11 @@ function NewsForm() {
       const fd = new FormData(form)
       const r = await adminPostMultipart('/api/admin/news', fd)
       if (r.ok) {
-        setMsg(`저장됨${r.id ? ` (id: ${r.id})` : ''}`)
+        setMsg(`Saved${r.id ? ` (id: ${r.id})` : ''}`)
         form.reset()
         setFileKey((k) => k + 1)
       } else {
-        setErr(r.error ?? '실패')
+        setErr(r.error ?? 'Failed')
       }
     } finally {
       setBusy(false)
@@ -258,16 +258,16 @@ function NewsForm() {
 
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
-      <Field label="제목" htmlFor={`${id}-title`}>
+      <Field label="Title" htmlFor={`${id}-title`}>
         <input id={`${id}-title`} name="title" required className={fieldClass} />
       </Field>
-      <Field label="날짜" htmlFor={`${id}-date`}>
+      <Field label="Date" htmlFor={`${id}-date`}>
         <input id={`${id}-date`} name="date" type="date" required className={fieldClass} />
       </Field>
-      <Field label="본문" htmlFor={`${id}-body`}>
+      <Field label="Body" htmlFor={`${id}-body`}>
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>
-      <Field label="이미지 (여러 장)" htmlFor={`${id}-img`}>
+      <Field label="Images (multiple)" htmlFor={`${id}-img`}>
         <input
           key={fileKey}
           id={`${id}-img`}
@@ -284,7 +284,7 @@ function NewsForm() {
         disabled={busy}
         className="rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
-        {busy ? '업로드 중…' : 'News 등록'}
+        {busy ? 'Uploading…' : 'Create News'}
       </button>
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (
@@ -313,11 +313,11 @@ function WorkForm() {
       const fd = new FormData(form)
       const r = await adminPostMultipart('/api/admin/work', fd)
       if (r.ok) {
-        setMsg(`저장됨${r.id ? ` (id: ${r.id})` : ''}`)
+        setMsg(`Saved${r.id ? ` (id: ${r.id})` : ''}`)
         form.reset()
         setFileKey((k) => k + 1)
       } else {
-        setErr(r.error ?? '실패')
+        setErr(r.error ?? 'Failed')
       }
     } finally {
       setBusy(false)
@@ -327,18 +327,18 @@ function WorkForm() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
       <p className="text-sm text-muted-foreground">
-        정렬 번호는 서버에서 자동 부여됩니다. 순서·내용·이미지는 Work →「아카이브 · 에디트」에서 바꿀 수 있습니다.
+        Sort numbers are assigned automatically by the server. You can edit order, content, and images in Work → Archive · Edit.
       </p>
-      <Field label="제목" htmlFor={`${id}-title`}>
+      <Field label="Title" htmlFor={`${id}-title`}>
         <input id={`${id}-title`} name="title" required className={fieldClass} />
       </Field>
-      <Field label="부제 (sub_title)" htmlFor={`${id}-sub`}>
+      <Field label="Subtitle (sub_title)" htmlFor={`${id}-sub`}>
         <input id={`${id}-sub`} name="sub_title" className={fieldClass} />
       </Field>
-      <Field label="본문" htmlFor={`${id}-body`}>
+      <Field label="Body" htmlFor={`${id}-body`}>
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>
-      <Field label="도면 이미지 — 왼쪽 박스 (여러 장)" htmlFor={`${id}-left`}>
+      <Field label="Drawing images — left column (multiple)" htmlFor={`${id}-left`}>
         <input
           key={`${fileKey}-L`}
           id={`${id}-left`}
@@ -350,7 +350,7 @@ function WorkForm() {
           className={`${fieldClass} py-2 file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium`}
         />
       </Field>
-      <Field label="작품 이미지 — 오른쪽 박스 (여러 장)" htmlFor={`${id}-right`}>
+      <Field label="Artwork images — right column (multiple)" htmlFor={`${id}-right`}>
         <input
           key={`${fileKey}-R`}
           id={`${id}-right`}
@@ -367,7 +367,7 @@ function WorkForm() {
         disabled={busy}
         className="rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
-        {busy ? '업로드 중…' : 'Work 등록'}
+        {busy ? 'Uploading…' : 'Create Work'}
       </button>
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (
@@ -396,11 +396,11 @@ function FabricationForm() {
       const fd = new FormData(form)
       const r = await adminPostMultipart('/api/admin/fabrication', fd)
       if (r.ok) {
-        setMsg(`저장됨${r.id ? ` (id: ${r.id})` : ''}`)
+        setMsg(`Saved${r.id ? ` (id: ${r.id})` : ''}`)
         form.reset()
         setFileKey((k) => k + 1)
       } else {
-        setErr(r.error ?? '실패')
+        setErr(r.error ?? 'Failed')
       }
     } finally {
       setBusy(false)
@@ -410,25 +410,24 @@ function FabricationForm() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
       <p className="text-sm text-muted-foreground">
-        목록 순서는 자동으로 맨 위에 쌓이게 부여됩니다. 순서·내용·이미지는 Fabrication →「아카이브 · 에디트」에서
-        바꿀 수 있습니다.
+        Items are automatically assigned so newer entries appear first. You can edit order, content, and images in Fabrication → Archive · Edit.
       </p>
-      <Field label="연도 (year)" htmlFor={`${id}-year`}>
+      <Field label="Year" htmlFor={`${id}-year`}>
         <input id={`${id}-year`} name="year" required className={fieldClass} placeholder="2026" />
       </Field>
-      <Field label="제목" htmlFor={`${id}-title`}>
+      <Field label="Title" htmlFor={`${id}-title`}>
         <input id={`${id}-title`} name="title" required className={fieldClass} />
       </Field>
-      <Field label="부제 (sub_title)" htmlFor={`${id}-sub`}>
+      <Field label="Subtitle (sub_title)" htmlFor={`${id}-sub`}>
         <input id={`${id}-sub`} name="sub_title" className={fieldClass} />
       </Field>
-      <Field label="카테고리" htmlFor={`${id}-cat`}>
-        <input id={`${id}-cat`} name="category" className={fieldClass} placeholder="Workshop 등" />
+      <Field label="Category" htmlFor={`${id}-cat`}>
+        <input id={`${id}-cat`} name="category" className={fieldClass} placeholder="e.g. Workshop" />
       </Field>
-      <Field label="본문" htmlFor={`${id}-body`}>
+      <Field label="Body" htmlFor={`${id}-body`}>
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>
-      <Field label="이미지 (여러 장)" htmlFor={`${id}-img`}>
+      <Field label="Images (multiple)" htmlFor={`${id}-img`}>
         <input
           key={fileKey}
           id={`${id}-img`}
@@ -445,7 +444,7 @@ function FabricationForm() {
         disabled={busy}
         className="rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
-        {busy ? '업로드 중…' : 'Fabrication 등록'}
+        {busy ? 'Uploading…' : 'Create Fabrication'}
       </button>
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (

@@ -77,14 +77,14 @@ function ImageThumbWithRemove({
         type="button"
         onClick={onToggle}
         className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[11px] font-bold leading-none text-destructive-foreground shadow-md ring-2 ring-background hover:bg-destructive/90"
-        aria-label={marked ? `${sideLabel} 삭제 취소` : `${sideLabel} 이미지 삭제`}
-        title={marked ? '삭제 취소' : '삭제'}
+        aria-label={marked ? `Undo ${sideLabel} removal` : `Remove ${sideLabel} image`}
+        title={marked ? 'Undo' : 'Remove'}
       >
         ×
       </button>
       {marked ? (
         <span className="absolute inset-x-0 bottom-0 bg-destructive/90 py-0.5 text-center text-[9px] font-medium text-destructive-foreground">
-          삭제됨
+          Removed
         </span>
       ) : null}
     </div>
@@ -117,7 +117,7 @@ function SortRow({
       <button
         type="button"
         className="touch-none shrink-0 cursor-grab rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
-        aria-label="끌어서 순서 변경"
+        aria-label="Drag to reorder"
         {...attributes}
         {...listeners}
       >
@@ -130,14 +130,14 @@ function SortRow({
           onClick={onEdit}
           className="rounded border border-border bg-background px-2 py-1 text-xs font-medium text-foreground hover:bg-muted"
         >
-          수정
+          Edit
         </button>
         <button
           type="button"
           onClick={onDelete}
           className="rounded border border-destructive/50 bg-background px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
         >
-          삭제
+          Delete
         </button>
       </div>
     </div>
@@ -200,7 +200,7 @@ function WorkEditForm({
       )
       if (cancelled) return
       if (!r.ok || !r.data?.doc) {
-        setLoadErr(r.error ?? '불러오기 실패')
+        setLoadErr(r.error ?? 'Failed to load')
         return
       }
       setDoc(r.data.doc)
@@ -245,13 +245,13 @@ function WorkEditForm({
     try {
       const r = await adminPostMultipart('/api/admin/work-update', fd)
       if (r.ok) {
-        showAdminToast('저장이 완료되었습니다.', 'success')
+        showAdminToast('Saved successfully.', 'success')
         onSaved()
       } else {
-        showAdminToast(r.error ?? '저장에 실패했습니다.', 'error')
+        showAdminToast(r.error ?? 'Failed to save.', 'error')
       }
     } catch {
-      showAdminToast('네트워크 오류로 저장에 실패했습니다.', 'error')
+      showAdminToast('Failed to save due to a network error.', 'error')
     } finally {
       setBusy(false)
     }
@@ -262,14 +262,14 @@ function WorkEditForm({
       <div className="whitespace-pre-wrap break-words rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
         {loadErr}
         <button type="button" className="ml-3 underline" onClick={onClose}>
-          닫기
+          Close
         </button>
       </div>
     )
   }
 
   if (!doc) {
-    return <p className="text-sm text-muted-foreground">불러오는 중…</p>
+    return <p className="text-sm text-muted-foreground">Loading…</p>
   }
 
   return (
@@ -279,12 +279,12 @@ function WorkEditForm({
       className="space-y-4 rounded-lg border border-border bg-muted/20 p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-foreground">Work 수정</p>
+        <p className="text-sm font-medium text-foreground">Edit Work</p>
         <button type="button" onClick={onClose} className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-          닫기
+          Close
         </button>
       </div>
-      <Field label="제목" htmlFor={`${formId}-title`}>
+      <Field label="Title" htmlFor={`${formId}-title`}>
         <input
           id={`${formId}-title`}
           name="title"
@@ -293,10 +293,10 @@ function WorkEditForm({
           className={fieldClass}
         />
       </Field>
-      <Field label="부제 (sub_title)" htmlFor={`${formId}-sub`}>
+      <Field label="Subtitle (sub_title)" htmlFor={`${formId}-sub`}>
         <input id={`${formId}-sub`} name="sub_title" defaultValue={doc.subTitle ?? ''} className={fieldClass} />
       </Field>
-      <Field label="본문" htmlFor={`${formId}-body`}>
+      <Field label="Body" htmlFor={`${formId}-body`}>
         <textarea
           id={`${formId}-body`}
           name="body"
@@ -307,12 +307,11 @@ function WorkEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        이미지: 기존 썸네일 ×는 삭제 예약(저장 시 반영). + 를 눌러 고른 뒤 맨 뒤에 생기는 주황 테두리「저장 전」썸네일이 곧
-        올라갈 이미지입니다. 저장하기를 눌러야 Sanity에 반영됩니다.
+        Images: clicking × on an existing thumbnail marks it for deletion (applied on save). Use + to pick new files. Thumbnails with an orange border are pending uploads. Changes are applied to Sanity only after you click Save.
       </p>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="min-w-0 space-y-2">
-          <p className="text-xs font-medium text-foreground">도면(왼쪽)</p>
+          <p className="text-xs font-medium text-foreground">Drawings (left)</p>
           <div className="flex flex-wrap gap-2">
             {(doc.imagesLeft ?? []).map((slot, i) => {
               const url = slot?.url
@@ -321,7 +320,7 @@ function WorkEditForm({
                 <ImageThumbWithRemove
                   key={`L-${i}`}
                   url={url}
-                  sideLabel="도면"
+                  sideLabel="drawing"
                   marked={rmLeft.has(i)}
                   onToggle={() => {
                     setRmLeft((prev) => {
@@ -338,7 +337,7 @@ function WorkEditForm({
               <PendingImageThumb
                 key={p.id}
                 url={p.url}
-                caption="도면"
+                caption="Drawing"
                 fileName={p.file.name}
                 onRemove={() => {
                   setPendingLeft((prev) => {
@@ -352,13 +351,13 @@ function WorkEditForm({
             ))}
             <AddImageButton
               inputId={`${formId}-pick-left`}
-              label="도면 이미지 추가"
+              label="Add drawing images"
               onFiles={(files) => {
                 const added = newPendingFromFileList(files)
                 if (!added.length) return
                 setPendingLeft((prev) => [...prev, ...added])
                 showAdminToast(
-                  `도면 이미지 ${added.length}장을 골랐습니다. 아래 저장을 누르면 업로드됩니다.`,
+                  `${added.length} drawing image(s) selected. Click Save below to upload.`,
                   'success',
                 )
               }}
@@ -366,7 +365,7 @@ function WorkEditForm({
           </div>
         </div>
         <div className="min-w-0 space-y-2">
-          <p className="text-xs font-medium text-foreground">작품(오른쪽)</p>
+          <p className="text-xs font-medium text-foreground">Artwork (right)</p>
           <div className="flex flex-wrap gap-2">
             {(doc.imagesRight ?? []).map((slot, i) => {
               const url = slot?.url
@@ -375,7 +374,7 @@ function WorkEditForm({
                 <ImageThumbWithRemove
                   key={`R-${i}`}
                   url={url}
-                  sideLabel="작품"
+                  sideLabel="artwork"
                   marked={rmRight.has(i)}
                   onToggle={() => {
                     setRmRight((prev) => {
@@ -392,7 +391,7 @@ function WorkEditForm({
               <PendingImageThumb
                 key={p.id}
                 url={p.url}
-                caption="작품"
+                caption="Artwork"
                 fileName={p.file.name}
                 onRemove={() => {
                   setPendingRight((prev) => {
@@ -406,13 +405,13 @@ function WorkEditForm({
             ))}
             <AddImageButton
               inputId={`${formId}-pick-right`}
-              label="작품 이미지 추가"
+              label="Add artwork images"
               onFiles={(files) => {
                 const added = newPendingFromFileList(files)
                 if (!added.length) return
                 setPendingRight((prev) => [...prev, ...added])
                 showAdminToast(
-                  `작품 이미지 ${added.length}장을 골랐습니다. 아래 저장을 누르면 업로드됩니다.`,
+                  `${added.length} artwork image(s) selected. Click Save below to upload.`,
                   'success',
                 )
               }}
@@ -426,10 +425,10 @@ function WorkEditForm({
           disabled={busy}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
         >
-          {busy ? '저장 중…' : '저장'}
+          {busy ? 'Saving…' : 'Save'}
         </button>
         <button type="button" onClick={clearPending} className="rounded-md border border-border px-3 py-2 text-sm">
-          추가한 파일 모두 취소
+          Clear all selected files
         </button>
       </div>
     </form>
@@ -447,7 +446,7 @@ export default function WorkArchivePanel() {
     setErr(null)
     const r = await adminGetJson<{ok: boolean; items: Row[]}>('/api/admin/work-list')
     if (!r.ok || !r.data?.items) {
-      setErr(r.error ?? '목록을 불러올 수 없습니다.')
+      setErr(r.error ?? 'Unable to load the list.')
       setItems([])
     } else {
       setItems(r.data.items)
@@ -480,37 +479,36 @@ export default function WorkArchivePanel() {
       ids: next.map((x) => x._id),
     })
     if (!save.ok) {
-      const why = save.error ?? '순서 저장 실패'
+      const why = save.error ?? 'Failed to save order.'
       setErr(why)
       showAdminToast(why, 'error')
       setItems(prev)
     } else {
-      showAdminToast('순서를 저장했습니다.', 'success')
+      showAdminToast('Order saved.', 'success')
     }
   }
 
   const onDelete = async (id: string, title: string) => {
-    if (!window.confirm(`「${title}」을(를) 삭제할까요? Sanity에서 완전히 지워집니다.`)) return
+    if (!window.confirm(`Delete "${title}"? This will be permanently removed from Sanity.`)) return
     setErr(null)
     const r = await adminPostJson('/api/admin/work-delete', {id})
     if (!r.ok) {
-      const why = r.error ?? '삭제 실패'
+      const why = r.error ?? 'Delete failed.'
       setErr(why)
       showAdminToast(why, 'error')
       return
     }
     if (editingId === id) setEditingId(null)
-    showAdminToast('삭제했습니다.', 'success')
+    showAdminToast('Deleted.', 'success')
     void load()
   }
 
-  if (loading) return <p className="text-sm text-muted-foreground">목록 불러오는 중…</p>
+  if (loading) return <p className="text-sm text-muted-foreground">Loading list…</p>
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <p className="text-sm leading-relaxed text-foreground/75">
-        위에서부터 사이트 WORK 페이지에 먼저 노출됩니다. 핸들로 순서를 바꾸면 저장되고, 수정·삭제는 각 행의
-        버튼을 사용하세요.
+        Items appear on the WORK page from top to bottom. Drag the handle to reorder, and use each row’s buttons to edit or delete.
       </p>
       {editingId ? (
         <WorkEditForm
@@ -523,7 +521,7 @@ export default function WorkArchivePanel() {
         />
       ) : null}
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">등록된 Work 프로젝트가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">No Work projects found.</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={items.map((i) => i._id)} strategy={verticalListSortingStrategy}>
@@ -532,9 +530,9 @@ export default function WorkArchivePanel() {
                 <li key={row._id} className="min-w-0">
                   <SortRow
                     id={row._id}
-                    title={row.title ?? '(제목 없음)'}
+                    title={row.title ?? '(Untitled)'}
                     onEdit={() => setEditingId(row._id)}
-                    onDelete={() => void onDelete(row._id, row.title ?? '(제목 없음)')}
+                    onDelete={() => void onDelete(row._id, row.title ?? '(Untitled)')}
                   />
                 </li>
               ))}
@@ -552,7 +550,7 @@ export default function WorkArchivePanel() {
         onClick={() => void load()}
         className="text-sm text-foreground/80 underline-offset-4 hover:underline"
       >
-        목록 새로고침
+        Refresh list
       </button>
     </div>
   )

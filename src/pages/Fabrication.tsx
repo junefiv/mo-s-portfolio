@@ -141,7 +141,7 @@ export default function Fabrication() {
   if (loading) {
     return (
       <main className="min-w-0 px-6 pt-page-below-nav">
-        <p className="mx-auto max-w-page text-sm text-muted-foreground">불러오는 중…</p>
+        <p className="mx-auto max-w-page text-sm text-muted-foreground">Loading…</p>
       </main>
     )
   }
@@ -160,7 +160,7 @@ export default function Fabrication() {
     return (
       <main className="min-w-0 px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-muted-foreground">
-          등록된 Fabrication 항목이 없습니다.
+          No Fabrication items are available.
         </p>
       </main>
     )
@@ -209,7 +209,7 @@ export default function Fabrication() {
                         <div className="min-w-0 w-full max-w-md justify-self-start">
                           <WorkImageCarousel
                             images={entry.images}
-                            label={`${entry.title} — 이미지`}
+                            label={`${entry.title} — image`}
                             index={imgIndex}
                             onIndexChange={(i) => onCarouselIndexChange(entry.id, i)}
                           />

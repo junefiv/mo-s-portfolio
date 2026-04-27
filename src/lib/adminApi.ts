@@ -39,38 +39,38 @@ function formatAdminFetchRejection(
   const { name, message: msg } = e
   if (name === 'AbortError' || (e as DOMException)?.name === 'AbortError') {
     return (
-      `[요청 취소(AbortError)] ${ctx.method} ${ctx.url}\n` +
-      '탐색 취소·Timeout 래퍼·AbortController로 중단된 경우가 많습니다.'
+      `[Request aborted (AbortError)] ${ctx.method} ${ctx.url}\n` +
+      'This is commonly caused by navigation cancellation, timeout wrappers, or AbortController.'
     )
   }
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return (
-      `[오프라인] ${ctx.method} ${ctx.url}\n` +
-      'navigator.onLine === false — 연결·비행기 모드·끊김·VPN을 확인하세요.\n' +
-      `원문: ${name}: ${msg}`
+      `[Offline] ${ctx.method} ${ctx.url}\n` +
+      'navigator.onLine === false — check network connection, airplane mode, temporary disconnects, or VPN.\n' +
+      `Original: ${name}: ${msg}`
     )
   }
   const mixed = isLikelyMixedContentBlocked(ctx.url)
   const cause = (e as Error & {cause?: unknown}).cause
   const causeLine =
     cause instanceof Error
-      ? `중첩 원인: ${cause.name}: ${cause.message}`
+      ? `Nested cause: ${cause.name}: ${cause.message}`
       : cause != null
-        ? `중첩 원인: ${String(cause)}`
+        ? `Nested cause: ${String(cause)}`
         : null
   const lines: string[] = [
-    `[fetch 예외 — 응답 수신 전] ${ctx.method} ${ctx.url}`,
-    `이름: ${name}`,
-    `메시지: ${msg}`,
+    `[Fetch exception — before response] ${ctx.method} ${ctx.url}`,
+    `Name: ${name}`,
+    `Message: ${msg}`,
   ]
   if (mixed) {
     lines.push(
-      '혼합 콘텐츠: 이 페이지는 HTTPS인데 API URL이 http:// 입니다. 브라우저가 요청을 막는 경우가 많습니다. API를 https://로 두세요.',
+      'Mixed content: this page is HTTPS but the API URL is http://. Browsers often block this request. Use an https:// API URL.',
     )
   }
   if (causeLine) lines.push(causeLine)
   lines.push(
-    '「Failed to fetch」류는 DNS·SSL·망·방화벽·CORS(실패 시 JS에 원인이 안 보이는 경우)에 공통될 수 있습니다. DevTools → Network(실패 항목)·Console을 보세요. `VITE_ADMIN_API_ORIGIN`을 쓰는 경우 이 기기에서 그 URL로 GET이 JSON을 주는지 확인하세요. sessionStorage라 기기마다 /admin에서 시크릿을 다시 입력해야 합니다.',
+    '"Failed to fetch" can indicate DNS, SSL, network, firewall, or CORS issues (in many CORS failures, JavaScript cannot see the detailed cause). Check DevTools → Network and Console. If you use `VITE_ADMIN_API_ORIGIN`, verify this device can GET JSON from that URL. Login state is stored in sessionStorage, so each device/browser must sign in again at /admin.',
   )
   return lines.join('\n')
 }
@@ -84,16 +84,16 @@ function formatAdminNonJsonResponse(res: Response, bodyText: string, requestUrl:
       contentType: res.headers.get('content-type'),
     })
   }
-  const ct = res.headers.get('content-type') ?? '(없음)'
+  const ct = res.headers.get('content-type') ?? '(none)'
   const preview = trimBodyPreview(bodyText)
   const looksHtml = /^\s*<!DOCTYPE html|<html/i.test(bodyText) || /text\/html/i.test(ct)
   const hint = looksHtml
-    ? 'HTML 응답: 정적 호스트(SPA 404)로 index.html이 오거나, API가 아닌 주소로 갔을 수 있습니다. `VITE_ADMIN_API_ORIGIN`이 비어 있으면 Pages 오리진으로만 요청이 갑니다.'
-    : 'JSON 파싱 실패: 잘못된 경로·프록시 HTML·빈 응답·서버 오류 본문일 수 있습니다. 위 status·Content-Type·미리보기로 구분하세요.'
+    ? 'HTML response detected: this may be index.html from a static host (SPA 404) or a non-API URL. If `VITE_ADMIN_API_ORIGIN` is empty, requests go to the current Pages origin.'
+    : 'JSON parse failed: possible causes are wrong path, proxied HTML, empty response, or server error body. Use status, Content-Type, and preview to identify the cause.'
   return (
     `[HTTP ${res.status} ${res.statusText}] ${requestUrl}\n` +
     `Content-Type: ${ct}\n` +
-    (preview ? `본문 앞 ${BODY_PREVIEW_LEN}자: ${preview}\n` : '본문: (빈 문자열)\n') +
+    (preview ? `Body preview (first ${BODY_PREVIEW_LEN} chars): ${preview}\n` : 'Body: (empty)\n') +
     hint
   )
 }
@@ -109,7 +109,7 @@ async function parseAdminJsonResponse<T>(res: Response, requestUrl: string): Pro
       ok: false,
       error:
         formatAdminNonJsonResponse(res, text, requestUrl) +
-        '\n빈 본문 200/204는 관리 API에서 예상 밖일 수 있습니다.',
+        '\nAn empty 200/204 body may be unexpected for this admin API.',
     }
   }
   try {
@@ -141,7 +141,7 @@ export async function adminAuth(secret: string): Promise<{ok: boolean; error?: s
     return {ok: false, error: formatAdminFetchRejection(e, {method: 'POST', url})}
   }
   const parsed = await parseAdminJsonResponse<{ok?: boolean; error?: string}>(res, url)
-  if (!parsed.ok) return {ok: false, error: parsed.error}
+  if ('error' in parsed) return {ok: false, error: parsed.error}
   const data = parsed.data
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: !!data.ok}
@@ -167,7 +167,7 @@ export async function adminGetJson<T extends Record<string, unknown>>(
   path: string,
 ): Promise<{ok: boolean; data?: T; error?: string}> {
   const secret = getStoredAdminSecret()
-  if (!secret) return {ok: false, error: '시크릿으로 먼저 로그인하세요.'}
+  if (!secret) return {ok: false, error: 'Please sign in with the admin secret first.'}
   const url = adminApiUrl(path)
   let res: Response
   try {
@@ -180,7 +180,7 @@ export async function adminGetJson<T extends Record<string, unknown>>(
     return {ok: false, error: formatAdminFetchRejection(e, {method: 'GET', url})}
   }
   const parsed = await parseAdminJsonResponse<T & {ok?: boolean; error?: string}>(res, url)
-  if (!parsed.ok) return {ok: false, error: parsed.error}
+  if ('error' in parsed) return {ok: false, error: parsed.error}
   const data = parsed.data
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: true, data}
@@ -192,7 +192,7 @@ export async function adminPostJsonData<T extends Record<string, unknown>>(
   body: unknown,
 ): Promise<{ok: boolean; data?: T; error?: string}> {
   const secret = getStoredAdminSecret()
-  if (!secret) return {ok: false, error: '시크릿으로 먼저 로그인하세요.'}
+  if (!secret) return {ok: false, error: 'Please sign in with the admin secret first.'}
   const url = adminApiUrl(path)
   let res: Response
   try {
@@ -209,10 +209,10 @@ export async function adminPostJsonData<T extends Record<string, unknown>>(
     return {ok: false, error: formatAdminFetchRejection(e, {method: 'POST', url})}
   }
   const parsed = await parseAdminJsonResponse<T & {ok?: boolean; error?: string}>(res, url)
-  if (!parsed.ok) return {ok: false, error: parsed.error}
+  if ('error' in parsed) return {ok: false, error: parsed.error}
   const data = parsed.data
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
-  if (data.ok !== true) return {ok: false, error: data.error ?? '요청 실패'}
+  if (data.ok !== true) return {ok: false, error: data.error ?? 'Request failed'}
   return {ok: true, data}
 }
 
@@ -221,7 +221,7 @@ export async function adminPostJson(
   body: unknown,
 ): Promise<{ok: boolean; error?: string}> {
   const secret = getStoredAdminSecret()
-  if (!secret) return {ok: false, error: '시크릿으로 먼저 로그인하세요.'}
+  if (!secret) return {ok: false, error: 'Please sign in with the admin secret first.'}
   const url = adminApiUrl(path)
   let res: Response
   try {
@@ -238,7 +238,7 @@ export async function adminPostJson(
     return {ok: false, error: formatAdminFetchRejection(e, {method: 'POST', url})}
   }
   const parsed = await parseAdminJsonResponse<{ok?: boolean; error?: string}>(res, url)
-  if (!parsed.ok) return {ok: false, error: parsed.error}
+  if ('error' in parsed) return {ok: false, error: parsed.error}
   const data = parsed.data
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: !!data.ok}
@@ -249,7 +249,7 @@ export async function adminPostMultipart(
   form: FormData,
 ): Promise<{ok: boolean; error?: string; id?: string}> {
   const secret = getStoredAdminSecret()
-  if (!secret) return {ok: false, error: '시크릿으로 먼저 로그인하세요.'}
+  if (!secret) return {ok: false, error: 'Please sign in with the admin secret first.'}
   const url = adminApiUrl(path)
   let res: Response
   try {
@@ -264,11 +264,11 @@ export async function adminPostMultipart(
       ok: false,
       error:
         formatAdminFetchRejection(e, {method: 'POST', url}) +
-        '\n\n[multipart] 여러 장·고해상도 이미지는 요청 본문 한도(호스팅)·서버리스 실행 시간에 걸리면 끊길 수 있습니다. 장 수를 나누거나 해상도를 낮춘 뒤 다시 시도하세요.',
+        '\n\n[multipart] Many high-resolution images can exceed request body limits or serverless execution time. Try splitting uploads into smaller batches or reducing image size/resolution.',
     }
   }
   const parsed = await parseAdminJsonResponse<{ok?: boolean; error?: string; id?: string}>(res, url)
-  if (!parsed.ok) return {ok: false, error: parsed.error}
+  if ('error' in parsed) return {ok: false, error: parsed.error}
   const data = parsed.data
   if (!res.ok) return {ok: false, error: data.error ?? `HTTP ${res.status}`}
   return {ok: !!data.ok, id: typeof data.id === 'string' ? data.id : undefined}

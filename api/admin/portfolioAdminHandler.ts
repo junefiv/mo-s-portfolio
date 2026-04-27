@@ -47,21 +47,21 @@ export function parsePortfolioAdminEnv(
     return {
       status: 'disabled',
       message:
-        '관리 API 비활성: production 빌드에서는 .env 에 PORTFOLIO_ADMIN_SECRET 이 필요합니다.',
+        'Admin API disabled: PORTFOLIO_ADMIN_SECRET is required in .env for production builds.',
     }
   }
   if (!tokenRaw) {
     return {
       status: 'disabled',
       message:
-        '관리 API 비활성: .env.local 등에 SANITY_API_WRITE_TOKEN 을 설정하세요. https://www.sanity.io/manage → 프로젝트 → API → Tokens → Add API token → Role: Editor',
+        'Admin API disabled: set SANITY_API_WRITE_TOKEN in .env.local (or equivalent). Create an Editor token at https://www.sanity.io/manage → Project → API → Tokens → Add API token.',
     }
   }
   if (!looksLikeSanityWriteToken(tokenRaw)) {
     return {
       status: 'disabled',
       message:
-        'SANITY_API_WRITE_TOKEN 이 Sanity API 토큰 형식이 아닙니다(sk로 시작하는 긴 문자열). /admin 로그인용 시크릿(예: 123456)과는 다른 값입니다. sanity.io/manage 에서 Editor 토큰을 새로 만드세요.',
+        'SANITY_API_WRITE_TOKEN does not look like a Sanity API token (expected a long value starting with "sk"). This is different from the /admin login secret (e.g. 123456). Create a new Editor token in sanity.io/manage.',
     }
   }
 
@@ -73,7 +73,7 @@ export function parsePortfolioAdminEnv(
 
 function formatSanityClientError(msg: string): string {
   if (/session not found|unauthorized/i.test(msg)) {
-    return `${msg} — API 토큰이 잘못되었거나 만료된 경우가 많습니다. sanity.io/manage 의 Tokens에서 sk… 토큰(Editor)을 다시 발급해 SANITY_API_WRITE_TOKEN 에 넣으세요. (CLI 로그인용 SANITY_AUTH_TOKEN 과는 다릅니다.)`
+    return `${msg} — The API token is often invalid or expired. Re-issue an Editor token (sk...) from sanity.io/manage → Tokens and set SANITY_API_WRITE_TOKEN. (This is different from CLI SANITY_AUTH_TOKEN.)`
   }
   return msg
 }
@@ -329,7 +329,7 @@ export class PortfolioAdminApi {
         ok: false,
         error:
           adminLoad.message ??
-          '관리 API 비활성: 환경 변수(SANITY_API_WRITE_TOKEN 등)를 확인하세요.',
+          'Admin API disabled: check environment variables (SANITY_API_WRITE_TOKEN, etc.).',
       })
       return
     }
@@ -339,7 +339,7 @@ export class PortfolioAdminApi {
 
     if (req.method === 'GET') {
       if (!verifySecret(req, adminEnv)) {
-        json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+        json(res, 401, {ok: false, error: 'Authentication required.'})
         return
       }
       try {
@@ -381,19 +381,19 @@ export class PortfolioAdminApi {
           json(res, 200, {ok: true})
           return
         }
-        json(res, 401, {ok: false, error: '시크릿이 올바르지 않습니다.'})
+        json(res, 401, {ok: false, error: 'Invalid secret.'})
         return
       }
 
       if (pathname === '/api/admin/work-fetch' || pathname === '/api/admin/fabrication-fetch') {
         const body = (await readJsonBody(req)) as Record<string, unknown> | null
         if (!verifySecret(req, adminEnv, body ?? undefined)) {
-          json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+          json(res, 401, {ok: false, error: 'Authentication required.'})
           return
         }
         const docId = normalizeId(body)
         if (!docId) {
-          json(res, 400, {ok: false, error: 'JSON { "id": string } 가 필요합니다.'})
+          json(res, 400, {ok: false, error: 'JSON body must include { "id": string }.'})
           return
         }
         try {
@@ -418,7 +418,7 @@ export class PortfolioAdminApi {
               {id: docId},
             )
             if (!doc) {
-              json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+              json(res, 404, {ok: false, error: 'Document not found.'})
               return
             }
             json(res, 200, {ok: true, doc})
@@ -443,7 +443,7 @@ export class PortfolioAdminApi {
             {id: docId},
           )
           if (!doc) {
-            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            json(res, 404, {ok: false, error: 'Document not found.'})
             return
           }
           json(res, 200, {ok: true, doc})
@@ -458,12 +458,12 @@ export class PortfolioAdminApi {
       if (pathname === '/api/admin/work-delete' || pathname === '/api/admin/fabrication-delete') {
         const body = (await readJsonBody(req)) as Record<string, unknown> | null
         if (!verifySecret(req, adminEnv, body ?? undefined)) {
-          json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+          json(res, 401, {ok: false, error: 'Authentication required.'})
           return
         }
         const docId = normalizeId(body)
         if (!docId) {
-          json(res, 400, {ok: false, error: 'JSON { "id": string } 가 필요합니다.'})
+          json(res, 400, {ok: false, error: 'JSON body must include { "id": string }.'})
           return
         }
         try {
@@ -473,7 +473,7 @@ export class PortfolioAdminApi {
             {id: docId, tp},
           )
           if (!exists) {
-            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            json(res, 404, {ok: false, error: 'Document not found.'})
             return
           }
           await client.delete(docId)
@@ -489,12 +489,12 @@ export class PortfolioAdminApi {
       if (pathname === '/api/admin/work-reorder' || pathname === '/api/admin/fabrication-reorder') {
         const body = (await readJsonBody(req)) as Record<string, unknown> | null
         if (!verifySecret(req, adminEnv, body ?? undefined)) {
-          json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+          json(res, 401, {ok: false, error: 'Authentication required.'})
           return
         }
         const ids = normalizeReorderIds(body)
         if (!ids) {
-          json(res, 400, {ok: false, error: 'JSON { "ids": string[] } 가 필요합니다.'})
+          json(res, 400, {ok: false, error: 'JSON body must include { "ids": string[] }.'})
           return
         }
         const field = pathname === '/api/admin/work-reorder' ? 'projectNo' : 'sortNo'
@@ -526,7 +526,7 @@ export class PortfolioAdminApi {
 
         const rq = req as MReq
         if (!verifySecret(req, adminEnv, rq.body)) {
-          json(res, 401, {ok: false, error: '인증이 필요합니다.'})
+          json(res, 401, {ok: false, error: 'Authentication required.'})
           return
         }
 
@@ -538,11 +538,11 @@ export class PortfolioAdminApi {
           const textBody = firstField(body, 'body')
           const files = rq.files as UploadedFile[] | undefined
           if (!title || !date || !textBody) {
-            json(res, 400, {ok: false, error: 'title, date, body는 필수입니다.'})
+            json(res, 400, {ok: false, error: 'title, date, and body are required.'})
             return
           }
           if (!files?.length) {
-            json(res, 400, {ok: false, error: '이미지를 1장 이상 선택하세요.'})
+            json(res, 400, {ok: false, error: 'Select at least one image.'})
             return
           }
           const images = await uploadImages(client, files)
@@ -567,14 +567,14 @@ export class PortfolioAdminApi {
           const left = fileMap?.imagesLeft
           const right = fileMap?.imagesRight
           if (!title || !textBody) {
-            json(res, 400, {ok: false, error: 'title, body는 필수입니다.'})
+            json(res, 400, {ok: false, error: 'title and body are required.'})
             return
           }
           const projectNo = await nextProjectNo(client)
           if (!left?.length || !right?.length) {
             json(res, 400, {
               ok: false,
-              error: '도면(왼쪽)·작품(오른쪽) 이미지를 각각 1장 이상 넣으세요.',
+              error: 'Provide at least one image for both drawings (left) and artworks (right).',
             })
             return
           }
@@ -598,7 +598,7 @@ export class PortfolioAdminApi {
         if (pathname === '/api/admin/work-update') {
           const docId = firstField(body, '_id')
           if (!docId) {
-            json(res, 400, {ok: false, error: '_id 가 필요합니다.'})
+            json(res, 400, {ok: false, error: '_id is required.'})
             return
           }
           const exists = await client.fetch<string | null>(
@@ -606,14 +606,14 @@ export class PortfolioAdminApi {
             {id: docId},
           )
           if (!exists) {
-            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            json(res, 404, {ok: false, error: 'Document not found.'})
             return
           }
           const title = firstField(body, 'title')
           const subTitle = firstField(body, 'sub_title')
           const textBody = firstField(body, 'body')
           if (!title || !textBody) {
-            json(res, 400, {ok: false, error: 'title, body는 필수입니다.'})
+            json(res, 400, {ok: false, error: 'title and body are required.'})
             return
           }
           const fileMap = rq.files as {[fieldname: string]: UploadedFile[]} | undefined
@@ -638,7 +638,7 @@ export class PortfolioAdminApi {
               imagesRight: Array<Record<string, unknown>> | null
             } | null>(`*[_id == $id && _type == "workProject"][0]{ imagesLeft, imagesRight }`, {id: docId})
             if (!cur) {
-              json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+              json(res, 404, {ok: false, error: 'Document not found.'})
               return
             }
             let leftArr = [...(cur.imagesLeft ?? [])]
@@ -657,7 +657,7 @@ export class PortfolioAdminApi {
               json(res, 400, {
                 ok: false,
                 error:
-                  '도면(왼쪽)·작품(오른쪽)에 이미지가 각각 최소 1장 있어야 합니다. 삭제·추가 후 다시 확인하세요.',
+                  'Both drawings (left) and artworks (right) must have at least one image. Check your remove/add changes and try again.',
               })
               return
             }
@@ -678,11 +678,11 @@ export class PortfolioAdminApi {
           const textBody = firstField(body, 'body')
           const files = rq.files as UploadedFile[] | undefined
           if (!year || !title || !textBody) {
-            json(res, 400, {ok: false, error: 'year, title, body는 필수입니다.'})
+            json(res, 400, {ok: false, error: 'year, title, and body are required.'})
             return
           }
           if (!files?.length) {
-            json(res, 400, {ok: false, error: '이미지를 1장 이상 선택하세요.'})
+            json(res, 400, {ok: false, error: 'Select at least one image.'})
             return
           }
           const images = await uploadImages(client, files)
@@ -706,7 +706,7 @@ export class PortfolioAdminApi {
         if (pathname === '/api/admin/fabrication-update') {
           const docId = firstField(body, '_id')
           if (!docId) {
-            json(res, 400, {ok: false, error: '_id 가 필요합니다.'})
+            json(res, 400, {ok: false, error: '_id is required.'})
             return
           }
           const exists = await client.fetch<string | null>(
@@ -714,7 +714,7 @@ export class PortfolioAdminApi {
             {id: docId},
           )
           if (!exists) {
-            json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+            json(res, 404, {ok: false, error: 'Document not found.'})
             return
           }
           const year = firstField(body, 'year')
@@ -723,7 +723,7 @@ export class PortfolioAdminApi {
           const category = firstField(body, 'category')
           const textBody = firstField(body, 'body')
           if (!year || !title || !textBody) {
-            json(res, 400, {ok: false, error: 'year, title, body는 필수입니다.'})
+            json(res, 400, {ok: false, error: 'year, title, and body are required.'})
             return
           }
           const filesFab = rq.files as UploadedFile[] | undefined
@@ -747,7 +747,7 @@ export class PortfolioAdminApi {
               {id: docId},
             )
             if (!cur) {
-              json(res, 404, {ok: false, error: '문서를 찾을 수 없습니다.'})
+              json(res, 404, {ok: false, error: 'Document not found.'})
               return
             }
             let imgArr = [...(cur.images ?? [])]
@@ -759,7 +759,7 @@ export class PortfolioAdminApi {
             if (!imgArr.length) {
               json(res, 400, {
                 ok: false,
-                error: '이미지는 최소 1장 있어야 합니다. 삭제·추가 후 다시 확인하세요.',
+                error: 'At least one image is required. Check your remove/add changes and try again.',
               })
               return
             }

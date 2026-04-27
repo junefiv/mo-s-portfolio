@@ -85,7 +85,7 @@ function WorkProjectSet({
                 aria-controls={bodyId}
                 onClick={() => setBodyOpen((o) => !o)}
                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground/65 transition-colors duration-200 hover:bg-foreground/[0.06] hover:text-foreground active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/20"
-                aria-label={bodyOpen ? '상세 닫기' : '상세 열기'}
+                aria-label={bodyOpen ? 'Close details' : 'Open details'}
               >
                 <span
                   className="text-3xl font-large leading-none tabular-nums"
@@ -261,7 +261,7 @@ export default function Work() {
         }`}
       >
         <nav
-          aria-label="WORK 프로젝트 목록"
+          aria-label="WORK project list"
           onScroll={scheduleRailHide}
           className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] touch-pan-y flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
         >
@@ -296,7 +296,7 @@ export default function Work() {
     return (
       <div className="px-6 pt-page-below-nav">
         <p className="mx-auto max-w-page text-sm text-muted-foreground">
-          등록된 WORK 프로젝트가 없습니다. /admin 또는 Sanity Studio에서 추가하세요.
+          No WORK projects are available. Add one in `/admin` or Sanity Studio.
         </p>
       </div>
     )
@@ -305,7 +305,7 @@ export default function Work() {
   if (!loadDone) {
     return (
       <div className="px-6 pt-page-below-nav">
-        <p className="mx-auto max-w-page text-sm text-muted-foreground">불러오는 중…</p>
+        <p className="mx-auto max-w-page text-sm text-muted-foreground">Loading…</p>
       </div>
     )
   }

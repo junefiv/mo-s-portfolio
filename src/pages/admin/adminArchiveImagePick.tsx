@@ -19,7 +19,7 @@ export function newPendingFromFileList(files: FileList | null): PendingSlot[] {
 export function AddImageButton({
   inputId,
   onFiles,
-  label = '이미지 추가',
+  label = 'Add images',
 }: {
   inputId: string
   onFiles: (files: FileList | null) => void
@@ -62,7 +62,7 @@ export function PendingImageThumb({
 }) {
   return (
     <div
-      title={fileName ? `저장 전 · ${fileName}` : '저장 전에만 있는 미리보기'}
+      title={fileName ? `Pending upload · ${fileName}` : 'Preview available before save only'}
       className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 border-dashed border-amber-500/70 bg-amber-50/30 ring-2 ring-amber-400/50 dark:bg-amber-950/25 dark:ring-amber-500/40"
     >
       <img src={url} alt="" className="h-full w-full object-cover" />
@@ -70,13 +70,13 @@ export function PendingImageThumb({
         type="button"
         onClick={onRemove}
         className="absolute -right-1 -top-1 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/90 text-[11px] font-bold leading-none text-background shadow-md ring-2 ring-background hover:bg-foreground"
-        aria-label={`${caption} 추가 취소`}
-        title="추가 취소"
+        aria-label={`Cancel ${caption} add`}
+        title="Cancel add"
       >
         ×
       </button>
       <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-amber-600/95 py-0.5 text-center text-[9px] font-semibold text-amber-50">
-        저장 전
+        Pending
       </span>
     </div>
   )
