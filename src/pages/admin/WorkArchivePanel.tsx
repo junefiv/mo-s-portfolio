@@ -26,6 +26,7 @@ import {
   type ReactNode,
 } from 'react'
 import {adminGetJson, adminPostJson, adminPostJsonData, adminPostMultipart} from '@/lib/adminApi'
+import {formDataWithResizedImages} from '@/lib/adminImageResize'
 import {showAdminToast} from '@/lib/adminToast'
 import {AddImageButton, newPendingFromFileList, PendingImageThumb, type PendingSlot} from './adminArchiveImagePick'
 
@@ -243,7 +244,8 @@ function WorkEditForm({
       fd.append('imagesRight', p.file, p.file.name || 'image.jpg')
     }
     try {
-      const r = await adminPostMultipart('/api/admin/work-update', fd)
+      const fdOut = await formDataWithResizedImages(fd)
+      const r = await adminPostMultipart('/api/admin/work-update', fdOut)
       if (r.ok) {
         showAdminToast('Saved successfully.', 'success')
         onSaved()

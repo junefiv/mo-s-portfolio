@@ -7,6 +7,7 @@ import {
   getStoredAdminSecret,
   setStoredAdminSecret,
 } from '@/lib/adminApi'
+import {formDataWithResizedImages} from '@/lib/adminImageResize'
 import AdminToastListener from './AdminToastListener'
 import FabricationArchivePanel from './FabricationArchivePanel'
 import WorkArchivePanel from './WorkArchivePanel'
@@ -242,7 +243,7 @@ function NewsForm() {
     setErr(null)
     setBusy(true)
     try {
-      const fd = new FormData(form)
+      const fd = await formDataWithResizedImages(new FormData(form))
       const r = await adminPostMultipart('/api/admin/news', fd)
       if (r.ok) {
         setMsg(`Saved${r.id ? ` (id: ${r.id})` : ''}`)
@@ -310,7 +311,7 @@ function WorkForm() {
     setErr(null)
     setBusy(true)
     try {
-      const fd = new FormData(form)
+      const fd = await formDataWithResizedImages(new FormData(form))
       const r = await adminPostMultipart('/api/admin/work', fd)
       if (r.ok) {
         setMsg(`Saved${r.id ? ` (id: ${r.id})` : ''}`)
@@ -393,7 +394,7 @@ function FabricationForm() {
     setErr(null)
     setBusy(true)
     try {
-      const fd = new FormData(form)
+      const fd = await formDataWithResizedImages(new FormData(form))
       const r = await adminPostMultipart('/api/admin/fabrication', fd)
       if (r.ok) {
         setMsg(`Saved${r.id ? ` (id: ${r.id})` : ''}`)
