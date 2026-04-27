@@ -109,7 +109,7 @@ export default function AdminPage() {
               required
             />
             {loginErr ? (
-              <p className="text-sm text-destructive" role="alert">
+              <p className="whitespace-pre-wrap break-words text-sm text-destructive" role="alert">
                 {loginErr}
               </p>
             ) : null}
@@ -288,7 +288,7 @@ function NewsForm() {
       </button>
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="whitespace-pre-wrap break-words text-sm text-destructive" role="alert">
           {err}
         </p>
       ) : null}
@@ -371,7 +371,7 @@ function WorkForm() {
       </button>
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="whitespace-pre-wrap break-words text-sm text-destructive" role="alert">
           {err}
         </p>
       ) : null}
@@ -449,7 +449,7 @@ function FabricationForm() {
       </button>
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{msg}</p> : null}
       {err ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="whitespace-pre-wrap break-words text-sm text-destructive" role="alert">
           {err}
         </p>
       ) : null}

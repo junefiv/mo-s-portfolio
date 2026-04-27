@@ -34,7 +34,7 @@ export default function AdminToastListener() {
       className="pointer-events-none fixed bottom-4 left-1/2 z-[9999] max-w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 px-3 sm:bottom-6"
     >
       <div
-        className={`pointer-events-auto rounded-lg border px-4 py-3 text-sm leading-snug shadow-lg ${
+        className={`pointer-events-auto max-h-[min(70vh,24rem)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg border px-4 py-3 text-sm leading-snug shadow-lg ${
           err
             ? 'border-destructive/50 bg-destructive/90 text-destructive-foreground'
             : 'border-border bg-card text-foreground'

@@ -242,7 +242,7 @@ function FabricationEditForm({
 
   if (loadErr) {
     return (
-      <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+      <div className="whitespace-pre-wrap break-words rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
         {loadErr}
         <button type="button" className="ml-3 underline" onClick={onClose}>
           닫기
@@ -468,7 +468,7 @@ export default function FabricationArchivePanel() {
         </DndContext>
       )}
       {err ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="whitespace-pre-wrap break-words text-sm text-destructive" role="alert">
           {err}
         </p>
       ) : null}
