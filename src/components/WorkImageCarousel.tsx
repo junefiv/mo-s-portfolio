@@ -10,6 +10,8 @@ import {
   type TransitionEvent,
 } from 'react'
 
+import {ImageLightbox, isTapForLightbox} from './ImageLightbox'
+
 const SWIPE_MIN_PX = 40
 const TRANSITION_MS = 500
 
@@ -67,6 +69,7 @@ export default function WorkImageCarousel({
   const [dimsBySrc, setDimsBySrc] = useState<
     Record<string, { w: number; h: number }>
   >({})
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const activeSrc = n > 0 ? images[Math.min(Math.max(index, 0), n - 1)] : undefined
   const navIconBlack = shouldUseBlackArrows(activeSrc, dimsBySrc)
@@ -119,22 +122,31 @@ export default function WorkImageCarousel({
   }
 
   const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
-    if (!startRef.current || n <= 1) {
+    if (n <= 1) {
       startRef.current = null
       return
     }
+    if (!startRef.current) {
+      return
+    }
     if (e.pointerId !== startRef.current.id) return
+    const start = startRef.current
     try {
       e.currentTarget.releasePointerCapture(e.pointerId)
     } catch {
       /* already released */
     }
-    const dx = e.clientX - startRef.current.x
-    const dy = e.clientY - startRef.current.y
+    const dx = e.clientX - start.x
+    const dy = e.clientY - start.y
     startRef.current = null
-    if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy)) return
-    if (dx < 0) goNext()
-    else goPrev()
+    if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) >= Math.abs(dy)) {
+      if (dx < 0) goNext()
+      else goPrev()
+      return
+    }
+    if (isTapForLightbox(start, e.clientX, e.clientY)) {
+      setLightboxOpen(true)
+    }
   }
 
   const onTrackTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
@@ -156,6 +168,17 @@ export default function WorkImageCarousel({
     }
   }
 
+  const lightboxEl = (
+    <ImageLightbox
+      open={lightboxOpen}
+      onClose={() => setLightboxOpen(false)}
+      images={images}
+      startIndex={index}
+      onNavigate={onIndexChange}
+      aria-label={label}
+    />
+  )
+
   if (n === 0) {
     return (
       <div
@@ -171,15 +194,23 @@ export default function WorkImageCarousel({
         className="relative min-h-0 w-full min-w-0 [touch-action:manipulation] select-none"
         aria-label={label}
       >
-        <div className="relative aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-[#ffffff]">
-          <img
-            src={images[0]!}
-            alt=""
-            className="h-full w-full object-contain"
-            loading="eager"
-            draggable={false}
-          />
-        </div>
+        <button
+          type="button"
+          onClick={() => setLightboxOpen(true)}
+          className="block w-full cursor-zoom-in border-0 bg-transparent p-0 text-left [touch-action:manipulation] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2"
+          aria-label="이미지 크게 보기"
+        >
+          <div className="relative aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-[#ffffff]">
+            <img
+              src={images[0]!}
+              alt=""
+              className="h-full w-full object-contain"
+              loading="eager"
+              draggable={false}
+            />
+          </div>
+        </button>
+        {lightboxEl}
       </div>
     )
   }
@@ -284,6 +315,7 @@ export default function WorkImageCarousel({
           />
         </svg>
       </button>
+      {lightboxEl}
     </div>
   )
 }

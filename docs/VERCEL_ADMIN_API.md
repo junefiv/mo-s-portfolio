@@ -12,7 +12,8 @@ GitHub Pages는 **정적 파일만** 올라가서 `/api/admin` 이 없습니다.
 
 ## 1단계: Vercel 가입
 
-1. 브라우저에서 [https://vercel.com](https://vercel.com) 을 엽니다.
+1. 브라우저에서 [https://vercel.com](https://vercel.com) 을 엽니다.\
+
 2. 우측 상단 **Sign Up** → **Continue with GitHub** 를 선택합니다.
 3. GitHub 로그인 후, Vercel이 저장소에 접근해도 된다는 **Authorize** 를 허용합니다.
 

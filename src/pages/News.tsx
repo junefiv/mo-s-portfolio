@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react'
+import {ImageLightbox} from '@/components/ImageLightbox'
 import {fetchNewsPosts, type SanityNewsPost} from '@/lib/newsFromSanity'
 
 type NewsItem = {
@@ -30,10 +31,17 @@ function formatNewsDate(iso: string) {
   })
 }
 
+type NewsLightbox = {
+  images: string[]
+  startIndex: number
+  label: string
+} | null
+
 export default function News() {
   const [items, setItems] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<NewsLightbox>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -81,13 +89,26 @@ export default function News() {
                 <article className="flex min-w-0 flex-col gap-1.5">
                   <div className="aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-muted">
                     {item.image ? (
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLightbox({
+                            images: [item.image],
+                            startIndex: 0,
+                            label: item.title,
+                          })
+                        }
+                        className="h-full w-full cursor-zoom-in border-0 bg-transparent p-0 [touch-action:manipulation] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2"
+                        aria-label="이미지 크게 보기"
+                      >
+                        <img
+                          src={item.image}
+                          alt=""
+                          className="pointer-events-none h-full w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </button>
                     ) : (
                       <div
                         className="flex h-full w-full items-center justify-center text-xs text-muted-foreground"
@@ -109,6 +130,14 @@ export default function News() {
             ))}
           </ul>
         )}
+
+        <ImageLightbox
+          open={lightbox !== null}
+          onClose={() => setLightbox(null)}
+          images={lightbox?.images ?? []}
+          startIndex={lightbox?.startIndex ?? 0}
+          aria-label={lightbox?.label ?? 'News image'}
+        />
       </div>
     </main>
   )
