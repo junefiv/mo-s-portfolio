@@ -164,20 +164,20 @@ async function uploadImages(
   files: UploadedFile[] | undefined,
 ): Promise<Array<{_type: 'image'; _key: string; asset: {_type: 'reference'; _ref: string}}>> {
   if (!files?.length) return []
-  const out: Array<{_type: 'image'; _key: string; asset: {_type: 'reference'; _ref: string}}> =
-    []
-  for (const file of files) {
-    const asset = await client.assets.upload('image', file.buffer, {
-      filename: file.originalname || 'upload.jpg',
-      contentType: file.mimetype || 'image/jpeg',
-    })
-    out.push({
-      _type: 'image',
-      _key: arrayKey(),
-      asset: {_type: 'reference', _ref: asset._id},
-    })
-  }
-  return out
+  const uploaded = await Promise.all(
+    files.map(async (file) => {
+      const asset = await client.assets.upload('image', file.buffer, {
+        filename: file.originalname || 'upload.jpg',
+        contentType: file.mimetype || 'image/jpeg',
+      })
+      return {
+        _type: 'image' as const,
+        _key: arrayKey(),
+        asset: {_type: 'reference' as const, _ref: asset._id},
+      }
+    }),
+  )
+  return uploaded
 }
 
 function firstField(body: Record<string, unknown>, key: string): string {

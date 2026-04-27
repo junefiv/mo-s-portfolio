@@ -260,7 +260,12 @@ export async function adminPostMultipart(
       body: form,
     })
   } catch (e) {
-    return {ok: false, error: formatAdminFetchRejection(e, {method: 'POST', url})}
+    return {
+      ok: false,
+      error:
+        formatAdminFetchRejection(e, {method: 'POST', url}) +
+        '\n\n[multipart] 여러 장·고해상도 이미지는 요청 본문 한도(호스팅)·서버리스 실행 시간에 걸리면 끊길 수 있습니다. 장 수를 나누거나 해상도를 낮춘 뒤 다시 시도하세요.',
+    }
   }
   const parsed = await parseAdminJsonResponse<{ok?: boolean; error?: string; id?: string}>(res, url)
   if (!parsed.ok) return {ok: false, error: parsed.error}

@@ -3,8 +3,6 @@ import {createPortal} from 'react-dom'
 import WorkImageCarousel from '../components/WorkImageCarousel'
 import {fetchWorkProjects} from '@/lib/workFromSanity'
 
-const AUTO_INTERVAL_MS = 10_000
-
 /** 스크롤 멈춘 뒤 이만큼 유지 후 WORK 목록 페이드아웃 */
 const RAIL_IDLE_HIDE_MS = 3200
 
@@ -38,22 +36,8 @@ function WorkProjectSet({
 }) {
   const [leftIndex, setLeftIndex] = useState(0)
   const [rightIndex, setRightIndex] = useState(0)
-  const [autoplay, setAutoplay] = useState(true)
   const [bodyOpen, setBodyOpen] = useState(false)
   const bodyId = `work-body-${project.id}`
-
-  const leftN = project.imagesLeft.length
-  const rightN = project.imagesRight.length
-  const canAutoplay = leftN > 1 || rightN > 1
-
-  useEffect(() => {
-    if (!autoplay || !canAutoplay) return
-    const t = window.setInterval(() => {
-      if (leftN > 1) setLeftIndex((i) => (i + 1) % leftN)
-      if (rightN > 1) setRightIndex((i) => (i + 1) % rightN)
-    }, AUTO_INTERVAL_MS)
-    return () => clearInterval(t)
-  }, [autoplay, canAutoplay, leftN, rightN, leftIndex, rightIndex])
 
   return (
     <div ref={onBlockRef} className="min-w-0">
@@ -76,36 +60,9 @@ function WorkProjectSet({
           bodyOpen ? 'md:items-start' : 'md:items-stretch'
         }`}
       >
-        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-          {canAutoplay && (
-            <button
-              type="button"
-              onClick={() => setAutoplay((p) => !p)}
-              className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-all hover:bg-foreground/5 hover:text-foreground active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              aria-pressed={autoplay}
-              aria-label={autoplay ? '자동 재생 멈춤' : '자동 재생 시작'}
-            >
-              {autoplay ? (
-                <span className="flex items-center justify-center gap-0.5" aria-hidden>
-                  <span className="h-3.5 w-1 rounded-sm bg-foreground" />
-                  <span className="h-3.5 w-1 rounded-sm bg-foreground" />
-                </span>
-              ) : (
-                <svg
-                  className="ml-0.5 h-5 w-5"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d="M8 5.14v14l11-7-11-7z" />
-                </svg>
-              )}
-            </button>
-          )}
-          <div className="min-w-0 flex-1">
-            <h3 className="text-xl leading-tight">{project.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{project.subTitle}</p>
-          </div>
+        <div className="min-w-0">
+          <h3 className="text-xl leading-tight">{project.title}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{project.subTitle}</p>
         </div>
 
         <div

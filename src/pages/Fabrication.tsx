@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type SetStateAction,
   type TransitionEvent,
 } from 'react'
 import WorkImageCarousel from '../components/WorkImageCarousel'
@@ -127,9 +128,15 @@ export default function Fabrication() {
     [],
   )
 
-  const onCarouselIndexChange = useCallback((id: string, index: number) => {
-    setCarouselIndex((prev) => ({...prev, [id]: index}))
-  }, [])
+  const onCarouselIndexChange = useCallback(
+    (id: string, action: SetStateAction<number>) => {
+      setCarouselIndex((prev) => ({
+        ...prev,
+        [id]: typeof action === 'function' ? action(prev[id] ?? 0) : action,
+      }))
+    },
+    [],
+  )
 
   if (loading) {
     return (

@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -46,7 +45,8 @@ type WorkImageCarouselProps = {
   images: string[]
   label: string
   index: number
-  onIndexChange: (index: number) => void
+  /** `useState`의 setter처럼 숫자 또는 `(prev) => next` — 래핑 시 클로저 `index` 지연 없이 동작 */
+  onIndexChange: Dispatch<SetStateAction<number>>
 }
 
 /**
@@ -81,7 +81,7 @@ export default function WorkImageCarousel({
     if (n > 1) setNoTransition(false)
   }, [n])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (n === 0) return
     if (n === 1) {
       prevIndexRef.current = index
@@ -104,13 +104,13 @@ export default function WorkImageCarousel({
 
   const goNext = useCallback(() => {
     if (n <= 1) return
-    onIndexChange((index + 1) % n)
-  }, [n, index, onIndexChange])
+    onIndexChange((prev) => (prev + 1) % n)
+  }, [n, onIndexChange])
 
   const goPrev = useCallback(() => {
     if (n <= 1) return
-    onIndexChange((index - 1 + n) % n)
-  }, [n, index, onIndexChange])
+    onIndexChange((prev) => (prev - 1 + n) % n)
+  }, [n, onIndexChange])
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (n <= 1) return
