@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -49,6 +50,8 @@ type WorkImageCarouselProps = {
   index: number
   /** `useState`의 setter처럼 숫자 또는 `(prev) => next` — 래핑 시 클로저 `index` 지연 없이 동작 */
   onIndexChange: Dispatch<SetStateAction<number>>
+  /** false면 탭/클릭 시 라이트박스 비활성(예: 모바일 md 미만) */
+  lightboxEnabled?: boolean
 }
 
 /**
@@ -60,6 +63,7 @@ export default function WorkImageCarousel({
   label,
   index,
   onIndexChange,
+  lightboxEnabled = true,
 }: WorkImageCarouselProps) {
   const n = images.length
   const startRef = useRef<{ x: number; y: number; id: number } | null>(null)
@@ -72,6 +76,10 @@ export default function WorkImageCarousel({
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const activeSrc = n > 0 ? images[Math.min(Math.max(index, 0), n - 1)] : undefined
+
+  useEffect(() => {
+    if (!lightboxEnabled) setLightboxOpen(false)
+  }, [lightboxEnabled])
   const navIconBlack = shouldUseBlackArrows(activeSrc, dimsBySrc)
 
   const looped = n > 1
@@ -145,7 +153,7 @@ export default function WorkImageCarousel({
       return
     }
     if (isTapForLightbox(start, e.clientX, e.clientY)) {
-      setLightboxOpen(true)
+      if (lightboxEnabled) setLightboxOpen(true)
     }
   }
 
@@ -168,16 +176,17 @@ export default function WorkImageCarousel({
     }
   }
 
-  const lightboxEl = (
-    <ImageLightbox
-      open={lightboxOpen}
-      onClose={() => setLightboxOpen(false)}
-      images={images}
-      startIndex={index}
-      onNavigate={onIndexChange}
-      aria-label={label}
-    />
-  )
+  const lightboxEl =
+    lightboxEnabled && n > 0 ? (
+      <ImageLightbox
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        images={images}
+        startIndex={index}
+        onNavigate={onIndexChange}
+        aria-label={label}
+      />
+    ) : null
 
   if (n === 0) {
     return (
@@ -189,27 +198,34 @@ export default function WorkImageCarousel({
   }
 
   if (n === 1) {
+    const frame = (
+      <div className="relative aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-[#ffffff]">
+        <img
+          src={images[0]!}
+          alt=""
+          className="h-full w-full object-contain"
+          loading="eager"
+          draggable={false}
+        />
+      </div>
+    )
     return (
       <div
         className="relative min-h-0 w-full min-w-0 [touch-action:manipulation] select-none"
         aria-label={label}
       >
-        <button
-          type="button"
-          onClick={() => setLightboxOpen(true)}
-          className="block w-full cursor-zoom-in border-0 bg-transparent p-0 text-left [touch-action:manipulation] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2"
-          aria-label="이미지 크게 보기"
-        >
-          <div className="relative aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-[#ffffff]">
-            <img
-              src={images[0]!}
-              alt=""
-              className="h-full w-full object-contain"
-              loading="eager"
-              draggable={false}
-            />
-          </div>
-        </button>
+        {lightboxEnabled ? (
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            className="block w-full cursor-zoom-in border-0 bg-transparent p-0 text-left [touch-action:manipulation] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2"
+            aria-label="이미지 크게 보기"
+          >
+            {frame}
+          </button>
+        ) : (
+          <div className="block w-full border-0 bg-transparent p-0">{frame}</div>
+        )}
         {lightboxEl}
       </div>
     )

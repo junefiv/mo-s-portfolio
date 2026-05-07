@@ -39,7 +39,6 @@ export default function Navigation() {
   const links = [
     { path: '/news', label: 'NEWS' },
     { path: '/', label: 'WORK' },
-    { path: '/fabrication', label: 'FABRICATION' },
     { path: '/info', label: 'INFO' },
   ]
 

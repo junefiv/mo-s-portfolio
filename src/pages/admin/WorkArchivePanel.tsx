@@ -40,7 +40,8 @@ type WorkDoc = {
   _id: string
   projectNo: number | null
   title: string | null
-  subTitle: string | null
+  subTitle1: string | null
+  subTitle2: string | null
   body: string | null
   imagesLeft: Array<{url: string | null} | null> | null
   imagesRight: Array<{url: string | null} | null> | null
@@ -213,12 +214,14 @@ function WorkEditForm({
     setBusy(true)
     const form = e.currentTarget
     const title = (form.elements.namedItem('title') as HTMLInputElement | null)?.value ?? ''
-    const subTitle = (form.elements.namedItem('sub_title') as HTMLInputElement | null)?.value ?? ''
+    const subTitle1 = (form.elements.namedItem('sub_title_1') as HTMLInputElement | null)?.value ?? ''
+    const subTitle2 = (form.elements.namedItem('sub_title_2') as HTMLInputElement | null)?.value ?? ''
     const body = (form.elements.namedItem('body') as HTMLTextAreaElement | null)?.value ?? ''
     const fd = new FormData()
     fd.append('_id', doc._id)
     fd.append('title', title)
-    fd.append('sub_title', subTitle)
+    fd.append('sub_title_1', subTitle1)
+    fd.append('sub_title_2', subTitle2)
     fd.append('body', body)
     fd.append('remove_left_indexes', [...rmLeft].sort((a, b) => a - b).join(','))
     fd.append('remove_right_indexes', [...rmRight].sort((a, b) => a - b).join(','))
@@ -284,8 +287,21 @@ function WorkEditForm({
           className={fieldClass}
         />
       </Field>
-      <Field label="Subtitle (sub_title)" htmlFor={`${formId}-sub`}>
-        <input id={`${formId}-sub`} name="sub_title" defaultValue={doc.subTitle ?? ''} className={fieldClass} />
+      <Field label="Subtitle 1" htmlFor={`${formId}-sub1`}>
+        <input
+          id={`${formId}-sub1`}
+          name="sub_title_1"
+          defaultValue={doc.subTitle1 ?? ''}
+          className={fieldClass}
+        />
+      </Field>
+      <Field label="Subtitle 2" htmlFor={`${formId}-sub2`}>
+        <input
+          id={`${formId}-sub2`}
+          name="sub_title_2"
+          defaultValue={doc.subTitle2 ?? ''}
+          className={fieldClass}
+        />
       </Field>
       <Field label="Body" htmlFor={`${formId}-body`}>
         <textarea

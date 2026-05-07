@@ -509,7 +509,8 @@ export class PortfolioAdminApi {
                   _id: string
                   projectNo: number | null
                   title: string | null
-                  subTitle: string | null
+                  subTitle1: string | null
+                  subTitle2: string | null
                   body: string | null
                   imagesLeft: Array<{url: string | null} | null> | null
                   imagesRight: Array<{url: string | null} | null> | null
@@ -517,7 +518,10 @@ export class PortfolioAdminApi {
               | null
             >(
               `*[_id == $id && _type == "workProject"][0]{
-                _id, projectNo, title, subTitle, body,
+                _id, projectNo, title,
+                "subTitle1": coalesce(subTitle1, subTitle),
+                "subTitle2": coalesce(subTitle2, ""),
+                body,
                 "imagesLeft": imagesLeft[]{ "url": asset->url },
                 "imagesRight": imagesRight[]{ "url": asset->url }
               }`,
@@ -704,7 +708,8 @@ export class PortfolioAdminApi {
 
         if (pathname === '/api/admin/work') {
           const title = firstField(body, 'title')
-          const subTitle = firstField(body, 'sub_title')
+          const subTitle1 = firstField(body, 'sub_title_1')
+          const subTitle2 = firstField(body, 'sub_title_2')
           const textBody = firstField(body, 'body')
           const fileMap = rq.files as {[fieldname: string]: UploadedFile[]} | undefined
           const left = fileMap?.imagesLeft
@@ -729,7 +734,8 @@ export class PortfolioAdminApi {
             projectNo,
             title,
             slug: {_type: 'slug', current: slug},
-            subTitle: subTitle || undefined,
+            subTitle1: subTitle1 || undefined,
+            subTitle2: subTitle2 || undefined,
             body: textBody,
             imagesLeft,
             imagesRight,
@@ -753,7 +759,8 @@ export class PortfolioAdminApi {
             return
           }
           const title = firstField(body, 'title')
-          const subTitle = firstField(body, 'sub_title')
+          const subTitle1 = firstField(body, 'sub_title_1')
+          const subTitle2 = firstField(body, 'sub_title_2')
           const textBody = firstField(body, 'body')
           if (!title || !textBody) {
             json(res, 400, {ok: false, error: 'title and body are required.'})
@@ -785,9 +792,9 @@ export class PortfolioAdminApi {
             title,
             body: textBody,
             slug: {_type: 'slug', current: makeSlug(title)},
+            subTitle1: subTitle1 || '',
+            subTitle2: subTitle2 || '',
           }
-          if (subTitle) setDoc.subTitle = subTitle
-          else setDoc.subTitle = ''
 
           if (patchImages) {
             const cur = await client.fetch<{
@@ -843,7 +850,7 @@ export class PortfolioAdminApi {
             setDoc.imagesRight = rightArr
           }
 
-          await client.patch(docId).set(setDoc).commit()
+          await client.patch(docId).set(setDoc).unset(['subTitle']).commit()
           json(res, 200, {ok: true, id: docId})
           return
         }

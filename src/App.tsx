@@ -1,7 +1,6 @@
 import { useLayoutEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import Navigation from './components/Navigation'
-import Fabrication from './pages/Fabrication'
 import News from './pages/News'
 import AdminPage from './pages/admin/AdminPage'
 import Info from './pages/Info'
@@ -21,7 +20,7 @@ export default function App() {
           <Route path="/" element={<Work />} />
           <Route path="/work" element={<Navigate to="/" replace />} />
           <Route path="/news" element={<News />} />
-          <Route path="/fabrication" element={<Fabrication />} />
+          <Route path="/fabrication" element={<Navigate to="/" replace />} />
           <Route path="/info" element={<Info />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>

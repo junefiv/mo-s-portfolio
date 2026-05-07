@@ -3,6 +3,21 @@ import {createPortal} from 'react-dom'
 import WorkImageCarousel from '../components/WorkImageCarousel'
 import {fetchWorkProjects} from '@/lib/workFromSanity'
 
+/** `@theme` md와 동일: 라이트박스는 md 이상에서만 */
+const MD_MIN_WIDTH = '(min-width: 48rem)'
+
+function useMdUp() {
+  const [mdUp, setMdUp] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia(MD_MIN_WIDTH)
+    const on = () => setMdUp(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return mdUp
+}
+
 /** 스크롤 멈춘 뒤 이만큼 유지 후 WORK 목록 페이드아웃 */
 const RAIL_IDLE_HIDE_MS = 3200
 
@@ -21,7 +36,8 @@ type WorkProject = {
   id: string
   no: number
   title: string
-  subTitle: string
+  subTitle1: string
+  subTitle2: string
   body: string
   imagesLeft: string[]
   imagesRight: string[]
@@ -34,6 +50,7 @@ function WorkProjectSet({
   project: WorkProject
   onBlockRef: (el: HTMLDivElement | null) => void
 }) {
+  const mdUp = useMdUp()
   const [leftIndex, setLeftIndex] = useState(0)
   const [rightIndex, setRightIndex] = useState(0)
   const [bodyOpen, setBodyOpen] = useState(false)
@@ -41,18 +58,20 @@ function WorkProjectSet({
 
   return (
     <div ref={onBlockRef} className="min-w-0">
-      <div className="mb-2 grid min-w-0 grid-cols-2 gap-2 sm:gap-3">
+      <div className="mb-2 grid min-w-0 grid-cols-1 gap-2 landscape:max-md:grid-cols-2 md:grid-cols-2 sm:gap-3">
         <WorkImageCarousel
           images={project.imagesLeft}
           label={`${project.title} — left`}
           index={leftIndex}
           onIndexChange={setLeftIndex}
+          lightboxEnabled={mdUp}
         />
         <WorkImageCarousel
           images={project.imagesRight}
           label={`${project.title} — right`}
           index={rightIndex}
           onIndexChange={setRightIndex}
+          lightboxEnabled={mdUp}
         />
       </div>
       <div
@@ -62,7 +81,16 @@ function WorkProjectSet({
       >
         <div className="min-w-0">
           <h3 className="text-xl leading-tight">{project.title}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{project.subTitle}</p>
+          {project.subTitle1 || project.subTitle2 ? (
+            <div className="mt-1 space-y-0">
+              {project.subTitle1 ? (
+                <p className="text-sm leading-relaxed text-muted-foreground">{project.subTitle1}</p>
+              ) : null}
+              {project.subTitle2 ? (
+                <p className="text-sm leading-relaxed text-muted-foreground">{project.subTitle2}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div
@@ -159,7 +187,8 @@ export default function Work() {
             id: r._id,
             no: r.projectNo ?? 0,
             title: r.title ?? '',
-            subTitle: r.subTitle ?? '',
+            subTitle1: r.subTitle1 ?? '',
+            subTitle2: r.subTitle2 ?? '',
             body: r.body ?? '',
             imagesLeft: left,
             imagesRight: right,

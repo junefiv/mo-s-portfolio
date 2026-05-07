@@ -26,10 +26,16 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'subTitle',
-      title: 'Subtitle',
+      name: 'subTitle1',
+      title: 'Subtitle 1',
       type: 'string',
-      description: '예: 연도 · 장소 — 유형',
+      description: '첫 번째 부제 (예: 연도 · 장소)',
+    }),
+    defineField({
+      name: 'subTitle2',
+      title: 'Subtitle 2',
+      type: 'string',
+      description: '두 번째 부제 (같은 스타일, 다음 줄에 표시)',
     }),
     defineField({
       name: 'body',
