@@ -20,7 +20,6 @@ import {
   useCallback,
   useEffect,
   useId,
-  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -28,7 +27,12 @@ import {
 import {adminGetJson, adminPostJson, adminPostJsonData, adminPostMultipart} from '@/lib/adminApi'
 import {formDataWithResizedImages} from '@/lib/adminImageResize'
 import {showAdminToast} from '@/lib/adminToast'
-import {AddImageButton, newPendingFromFileList, PendingImageThumb, type PendingSlot} from './adminArchiveImagePick'
+import {
+  AdminSortableImageSlotStrip,
+  serializeSlotsForMultipart,
+  slotsFromWorkSide,
+  type AdminImgSlotRow,
+} from './AdminSortableImageSlots'
 
 type Row = {_id: string; title: string | null; projectNo: number | null}
 
@@ -52,42 +56,6 @@ function Field({label, htmlFor, children}: {label: string; htmlFor: string; chil
         {label}
       </label>
       {children}
-    </div>
-  )
-}
-
-function ImageThumbWithRemove({
-  url,
-  sideLabel,
-  marked,
-  onToggle,
-}: {
-  url: string
-  sideLabel: string
-  marked: boolean
-  onToggle: () => void
-}) {
-  return (
-    <div
-      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border ${
-        marked ? 'border-destructive opacity-55 ring-2 ring-destructive/40' : 'border-border'
-      }`}
-    >
-      <img src={url} alt="" className="h-full w-full object-cover" />
-      <button
-        type="button"
-        onClick={onToggle}
-        className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-[11px] font-bold leading-none text-destructive-foreground shadow-md ring-2 ring-background hover:bg-destructive/90"
-        aria-label={marked ? `Undo ${sideLabel} removal` : `Remove ${sideLabel} image`}
-        title={marked ? 'Undo' : 'Remove'}
-      >
-        ×
-      </button>
-      {marked ? (
-        <span className="absolute inset-x-0 bottom-0 bg-destructive/90 py-0.5 text-center text-[9px] font-medium text-destructive-foreground">
-          Removed
-        </span>
-      ) : null}
     </div>
   )
 }
@@ -158,34 +126,41 @@ function WorkEditForm({
   const [doc, setDoc] = useState<WorkDoc | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  /** 원본 배열 기준 인덱스 — 서버에 remove_*_indexes 로 전달 */
   const [rmLeft, setRmLeft] = useState<Set<number>>(() => new Set())
   const [rmRight, setRmRight] = useState<Set<number>>(() => new Set())
-  const [pendingLeft, setPendingLeft] = useState<PendingSlot[]>([])
-  const [pendingRight, setPendingRight] = useState<PendingSlot[]>([])
-  const pendingReleaseRef = useRef<{left: PendingSlot[]; right: PendingSlot[]}>({left: [], right: []})
-  const pendingLeftSubmitRef = useRef<PendingSlot[]>([])
-  const pendingRightSubmitRef = useRef<PendingSlot[]>([])
-  pendingReleaseRef.current = {left: pendingLeft, right: pendingRight}
-  pendingLeftSubmitRef.current = pendingLeft
-  pendingRightSubmitRef.current = pendingRight
+  const [leftSlots, setLeftSlots] = useState<AdminImgSlotRow[]>([])
+  const [rightSlots, setRightSlots] = useState<AdminImgSlotRow[]>([])
 
   useEffect(() => {
     return () => {
-      pendingReleaseRef.current.left.forEach((p) => URL.revokeObjectURL(p.url))
-      pendingReleaseRef.current.right.forEach((p) => URL.revokeObjectURL(p.url))
+      setLeftSlots((prev) => {
+        prev.forEach((s) => {
+          if (s.kind === 'pending') URL.revokeObjectURL(s.pending.url)
+        })
+        return []
+      })
+      setRightSlots((prev) => {
+        prev.forEach((s) => {
+          if (s.kind === 'pending') URL.revokeObjectURL(s.pending.url)
+        })
+        return []
+      })
     }
   }, [])
 
   useEffect(() => {
     setRmLeft(new Set())
     setRmRight(new Set())
-    setPendingLeft((prev) => {
-      prev.forEach((p) => URL.revokeObjectURL(p.url))
+    setLeftSlots((prev) => {
+      prev.forEach((s) => {
+        if (s.kind === 'pending') URL.revokeObjectURL(s.pending.url)
+      })
       return []
     })
-    setPendingRight((prev) => {
-      prev.forEach((p) => URL.revokeObjectURL(p.url))
+    setRightSlots((prev) => {
+      prev.forEach((s) => {
+        if (s.kind === 'pending') URL.revokeObjectURL(s.pending.url)
+      })
       return []
     })
   }, [docId])
@@ -211,14 +186,24 @@ function WorkEditForm({
     }
   }, [docId])
 
+  useEffect(() => {
+    if (!doc) return
+    setLeftSlots(slotsFromWorkSide(doc.imagesLeft))
+    setRightSlots(slotsFromWorkSide(doc.imagesRight))
+  }, [doc])
+
   const clearPending = () => {
-    setPendingLeft((prev) => {
-      prev.forEach((p) => URL.revokeObjectURL(p.url))
-      return []
+    setLeftSlots((prev) => {
+      prev.forEach((s) => {
+        if (s.kind === 'pending') URL.revokeObjectURL(s.pending.url)
+      })
+      return prev.filter((s) => s.kind === 'existing')
     })
-    setPendingRight((prev) => {
-      prev.forEach((p) => URL.revokeObjectURL(p.url))
-      return []
+    setRightSlots((prev) => {
+      prev.forEach((s) => {
+        if (s.kind === 'pending') URL.revokeObjectURL(s.pending.url)
+      })
+      return prev.filter((s) => s.kind === 'existing')
     })
   }
 
@@ -237,11 +222,15 @@ function WorkEditForm({
     fd.append('body', body)
     fd.append('remove_left_indexes', [...rmLeft].sort((a, b) => a - b).join(','))
     fd.append('remove_right_indexes', [...rmRight].sort((a, b) => a - b).join(','))
-    for (const p of pendingLeftSubmitRef.current) {
-      fd.append('imagesLeft', p.file, p.file.name || 'image.jpg')
+    const leftSer = serializeSlotsForMultipart(leftSlots, rmLeft)
+    const rightSer = serializeSlotsForMultipart(rightSlots, rmRight)
+    fd.append('left_slots', leftSer.json)
+    fd.append('right_slots', rightSer.json)
+    for (const f of leftSer.files) {
+      fd.append('imagesLeft', f, f.name || 'image.jpg')
     }
-    for (const p of pendingRightSubmitRef.current) {
-      fd.append('imagesRight', p.file, p.file.name || 'image.jpg')
+    for (const f of rightSer.files) {
+      fd.append('imagesRight', f, f.name || 'image.jpg')
     }
     try {
       const fdOut = await formDataWithResizedImages(fd)
@@ -309,116 +298,48 @@ function WorkEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        Images: clicking × on an existing thumbnail marks it for deletion (applied on save). Use + to pick new files. Thumbnails with an orange border are pending uploads. Changes are applied to Sanity only after you click Save.
+        Images: ⋮⋮로 드래그해 순서를 바꿀 수 있습니다. ×는 삭제 예약(저장 시 반영), +로 새 파일을 끼워 넣을 수 있습니다. 주황 테두리는 저장 전 업로드 대기입니다. Save 후 Sanity에 반영됩니다.
       </p>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="min-w-0 space-y-2">
           <p className="text-xs font-medium text-foreground">Drawings (left)</p>
-          <div className="flex flex-wrap gap-2">
-            {(doc.imagesLeft ?? []).map((slot, i) => {
-              const url = slot?.url
-              if (!url) return null
-              return (
-                <ImageThumbWithRemove
-                  key={`L-${i}`}
-                  url={url}
-                  sideLabel="drawing"
-                  marked={rmLeft.has(i)}
-                  onToggle={() => {
-                    setRmLeft((prev) => {
-                      const n = new Set(prev)
-                      if (n.has(i)) n.delete(i)
-                      else n.add(i)
-                      return n
-                    })
-                  }}
-                />
-              )
-            })}
-            {pendingLeft.map((p) => (
-              <PendingImageThumb
-                key={p.id}
-                url={p.url}
-                caption="Drawing"
-                fileName={p.file.name}
-                onRemove={() => {
-                  setPendingLeft((prev) => {
-                    const i = prev.findIndex((x) => x.id === p.id)
-                    if (i < 0) return prev
-                    URL.revokeObjectURL(prev[i].url)
-                    return prev.filter((_, j) => j !== i)
-                  })
-                }}
-              />
-            ))}
-            <AddImageButton
-              inputId={`${formId}-pick-left`}
-              label="Add drawing images"
-              onFiles={(files) => {
-                const added = newPendingFromFileList(files)
-                if (!added.length) return
-                setPendingLeft((prev) => [...prev, ...added])
-                showAdminToast(
-                  `${added.length} drawing image(s) selected. Click Save below to upload.`,
-                  'success',
-                )
-              }}
-            />
-          </div>
+          <AdminSortableImageSlotStrip
+            slots={leftSlots}
+            setSlots={setLeftSlots}
+            rmExisting={rmLeft}
+            onToggleExistingRemove={(origIndex) => {
+              setRmLeft((prev) => {
+                const n = new Set(prev)
+                if (n.has(origIndex)) n.delete(origIndex)
+                else n.add(origIndex)
+                return n
+              })
+            }}
+            pickInputId={`${formId}-pick-left`}
+            addLabel="Add drawing images"
+            onToast={(m) => showAdminToast(m, 'success')}
+            sideLabel="drawing"
+          />
         </div>
         <div className="min-w-0 space-y-2">
           <p className="text-xs font-medium text-foreground">Artwork (right)</p>
-          <div className="flex flex-wrap gap-2">
-            {(doc.imagesRight ?? []).map((slot, i) => {
-              const url = slot?.url
-              if (!url) return null
-              return (
-                <ImageThumbWithRemove
-                  key={`R-${i}`}
-                  url={url}
-                  sideLabel="artwork"
-                  marked={rmRight.has(i)}
-                  onToggle={() => {
-                    setRmRight((prev) => {
-                      const n = new Set(prev)
-                      if (n.has(i)) n.delete(i)
-                      else n.add(i)
-                      return n
-                    })
-                  }}
-                />
-              )
-            })}
-            {pendingRight.map((p) => (
-              <PendingImageThumb
-                key={p.id}
-                url={p.url}
-                caption="Artwork"
-                fileName={p.file.name}
-                onRemove={() => {
-                  setPendingRight((prev) => {
-                    const i = prev.findIndex((x) => x.id === p.id)
-                    if (i < 0) return prev
-                    URL.revokeObjectURL(prev[i].url)
-                    return prev.filter((_, j) => j !== i)
-                  })
-                }}
-              />
-            ))}
-            <AddImageButton
-              inputId={`${formId}-pick-right`}
-              label="Add artwork images"
-              onFiles={(files) => {
-                const added = newPendingFromFileList(files)
-                if (!added.length) return
-                setPendingRight((prev) => [...prev, ...added])
-                showAdminToast(
-                  `${added.length} artwork image(s) selected. Click Save below to upload.`,
-                  'success',
-                )
-              }}
-            />
-          </div>
+          <AdminSortableImageSlotStrip
+            slots={rightSlots}
+            setSlots={setRightSlots}
+            rmExisting={rmRight}
+            onToggleExistingRemove={(origIndex) => {
+              setRmRight((prev) => {
+                const n = new Set(prev)
+                if (n.has(origIndex)) n.delete(origIndex)
+                else n.add(origIndex)
+                return n
+              })
+            }}
+            pickInputId={`${formId}-pick-right`}
+            addLabel="Add artwork images"
+            onToast={(m) => showAdminToast(m, 'success')}
+            sideLabel="artwork"
+          />
         </div>
       </div>
       <div className="flex flex-wrap gap-2">

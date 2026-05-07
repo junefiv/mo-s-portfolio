@@ -5,7 +5,7 @@ const newsPostsQuery = `*[_type == "newsPost"] | order(publishedAt desc) {
   title,
   "date": publishedAt,
   body,
-  "coverUrl": images[0].asset->url
+  "imageUrls": images[].asset->url
 }`
 
 export type SanityNewsPost = {
@@ -13,7 +13,7 @@ export type SanityNewsPost = {
   title: string | null
   date: string | null
   body: string | null
-  coverUrl: string | null
+  imageUrls: (string | null)[] | null
 }
 
 export async function fetchNewsPosts(): Promise<SanityNewsPost[]> {

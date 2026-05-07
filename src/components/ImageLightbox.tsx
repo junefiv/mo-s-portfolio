@@ -16,9 +16,9 @@ export type ImageLightboxProps = {
 const TAP_MAX_MOVE_PX = 10
 
 /**
- * 풀스크린 딤 + 중앙 정사각(목록 썸네일과 동일) 흰 액자, 이미지는 object-contain.
- * - 어두운 오버레이(이미지 바깥) 클릭 → 닫기
- * - 이전/다음: 이미지 영역 내부 좌·우(단일 이미지일 때는 숨김)
+ * 풀스크린 딤 + 중앙 정사각 흰 액자, 이미지는 object-contain.
+ * - 밝은 반투명 오버레이(이미지 바깥) 클릭 → 닫기
+ * - 이전/다음: 화면 좌·우 끝(단일 이미지일 때는 숨김)
  * - Esc → 닫기, 좌우 화살표 → 이전/다음
  */
 export function ImageLightbox({
@@ -115,14 +115,64 @@ export function ImageLightbox({
       <button
         type="button"
         onClick={onClose}
-        className="absolute inset-0 z-0 min-h-0 w-full border-0 bg-foreground/85 p-0"
+        className="absolute inset-0 z-0 min-h-0 w-full border-0 bg-white/85 p-0"
         aria-label="닫기"
       />
+      {showNav ? (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              goPrev()
+            }}
+            className="pointer-events-auto fixed left-0 top-0 z-20 flex h-full w-14 min-w-14 xs:w-16 sm:w-[4.5rem] md:w-20 items-center justify-center border-0 bg-transparent p-0 text-foreground/85 [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.95))_drop-shadow(0_0_2px_rgba(0,0,0,0.2))] transition hover:bg-foreground/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25"
+            aria-label="이전 이미지"
+          >
+            <svg
+              className="pointer-events-none h-10 w-10 xs:h-11 xs:w-11 sm:h-12 sm:w-12 md:h-14 md:w-14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              aria-hidden
+            >
+              <path
+                d="M15 6l-6 6 6 6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              goNext()
+            }}
+            className="pointer-events-auto fixed right-0 top-0 z-20 flex h-full w-14 min-w-14 xs:w-16 sm:w-[4.5rem] md:w-20 items-center justify-center border-0 bg-transparent p-0 text-foreground/85 [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.95))_drop-shadow(0_0_2px_rgba(0,0,0,0.2))] transition hover:bg-foreground/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25"
+            aria-label="다음 이미지"
+          >
+            <svg
+              className="pointer-events-none h-10 w-10 xs:h-11 xs:w-11 sm:h-12 sm:w-12 md:h-14 md:w-14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              aria-hidden
+            >
+              <path
+                d="M9 6l6 6-6 6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </>
+      ) : null}
       <div className="pointer-events-none absolute inset-0 z-10 flex min-h-0 w-full min-w-0 items-center justify-center p-3 sm:p-4 md:p-6">
-        {/* 목록과 같이 정사각형 — 한 변은 뷰포트에 맞게. object-contain 여백은 흰 배경 */}
-        <div
-          className="pointer-events-auto relative aspect-square w-[min(90dvw,calc(100dvh-3rem),1400px)] max-w-full min-h-0 min-w-0 shrink-0 overflow-hidden bg-white"
-        >
+        {/* 정사각형 — 썸네일 대비 ~1.5배 정도만 커 보이도록 한 변 상한을 낮춤. object-contain 여백은 흰 배경 */}
+        <div className="pointer-events-auto relative aspect-square w-[min(68dvw,calc(85dvh-3rem),40rem)] max-w-full min-h-0 min-w-0 shrink-0 overflow-hidden bg-white">
           <div className="relative flex h-full w-full min-h-0 min-w-0 items-center justify-center">
             <img
               src={src}
@@ -130,58 +180,6 @@ export function ImageLightbox({
               className="h-full w-full min-h-0 min-w-0 select-none object-contain"
               draggable={false}
             />
-            {showNav ? (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    goPrev()
-                  }}
-                  className="absolute left-0 top-0 z-20 flex h-full w-10 sm:w-12 md:w-14 items-center justify-center text-foreground/80 [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.9))] transition hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
-                  aria-label="이전 이미지"
-                >
-                  <svg
-                    className="pointer-events-none h-6 w-6"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden
-                  >
-                    <path
-                      d="M15 6l-6 6 6 6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    goNext()
-                  }}
-                  className="absolute right-0 top-0 z-20 flex h-full w-10 sm:w-12 md:w-14 items-center justify-center text-foreground/80 [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.9))] transition hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
-                  aria-label="다음 이미지"
-                >
-                  <svg
-                    className="pointer-events-none h-6 w-6"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden
-                  >
-                    <path
-                      d="M9 6l6 6-6 6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </>
-            ) : null}
           </div>
         </div>
       </div>

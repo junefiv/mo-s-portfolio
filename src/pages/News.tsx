@@ -7,19 +7,26 @@ type NewsItem = {
   date: string
   title: string
   body: string
+  /** 썸네일(첫 이미지) */
   image: string
+  /** Sanity `images` 배열 순서 그대로 */
+  images: string[]
 }
 
 function mapSanityToItems(rows: SanityNewsPost[]): NewsItem[] {
   return rows
     .filter((r) => r._id && r.title)
-    .map((r) => ({
-      id: r._id,
-      date: (r.date ?? '').slice(0, 10) || '1970-01-01',
-      title: r.title ?? '',
-      body: r.body ?? '',
-      image: r.coverUrl ?? '',
-    }))
+    .map((r) => {
+      const images = (r.imageUrls ?? []).filter((u): u is string => typeof u === 'string' && u.length > 0)
+      return {
+        id: r._id,
+        date: (r.date ?? '').slice(0, 10) || '1970-01-01',
+        title: r.title ?? '',
+        body: r.body ?? '',
+        image: images[0] ?? '',
+        images: images.length > 0 ? images : [],
+      }
+    })
 }
 
 function formatNewsDate(iso: string) {
@@ -93,7 +100,7 @@ export default function News() {
                         type="button"
                         onClick={() =>
                           setLightbox({
-                            images: [item.image],
+                            images: item.images.length > 0 ? item.images : item.image ? [item.image] : [],
                             startIndex: 0,
                             label: item.title,
                           })

@@ -1,21 +1,4 @@
 import {
-  DndContext,
-  type DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import {CSS} from '@dnd-kit/utilities'
-import {
   startTransition,
   useCallback,
   useEffect,
@@ -34,14 +17,12 @@ import {
   type AdminImgSlotRow,
 } from './AdminSortableImageSlots'
 
-type Row = {_id: string; title: string | null; sortNo: number | null}
+type Row = {_id: string; title: string | null; publishedAt: string | null}
 
-type FabDoc = {
+type NewsDoc = {
   _id: string
-  year: string | null
   title: string | null
-  subTitle: string | null
-  category: string | null
+  publishedAt: string | null
   body: string | null
   images: (string | null)[] | null
 }
@@ -60,39 +41,29 @@ function Field({label, htmlFor, children}: {label: string; htmlFor: string; chil
   )
 }
 
-function SortRow({
-  id,
+function dateInputValue(iso: string | null): string {
+  if (!iso) return ''
+  const s = iso.slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''
+}
+
+function ListRow({
   title,
+  subtitle,
   onEdit,
   onDelete,
 }: {
-  id: string
   title: string
+  subtitle: string
   onEdit: () => void
   onDelete: () => void
 }) {
-  const {attributes, listeners, setNodeRef, transform, transition, isDragging} = useSortable({id})
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.65 : 1,
-  }
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex min-w-0 flex-wrap items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm sm:flex-nowrap sm:gap-3"
-    >
-      <button
-        type="button"
-        className="touch-none shrink-0 cursor-grab rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
-        aria-label="Drag to reorder"
-        {...attributes}
-        {...listeners}
-      >
-        <span aria-hidden>⋮⋮</span>
-      </button>
-      <span className="min-w-0 flex-1 truncate font-medium text-foreground">{title}</span>
+    <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm sm:flex-nowrap sm:gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium text-foreground">{title}</p>
+        {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+      </div>
       <div className="flex shrink-0 gap-2">
         <button
           type="button"
@@ -113,7 +84,7 @@ function SortRow({
   )
 }
 
-function FabricationEditForm({
+function NewsEditForm({
   docId,
   onClose,
   onSaved,
@@ -123,7 +94,7 @@ function FabricationEditForm({
   onSaved: () => void
 }) {
   const formId = useId()
-  const [doc, setDoc] = useState<FabDoc | null>(null)
+  const [doc, setDoc] = useState<NewsDoc | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [rmImg, setRmImg] = useState<Set<number>>(() => new Set())
@@ -155,8 +126,8 @@ function FabricationEditForm({
     setLoadErr(null)
     setDoc(null)
     void (async () => {
-      const r = await adminPostJsonData<{ok: boolean; doc?: FabDoc; error?: string}>(
-        '/api/admin/fabrication-fetch',
+      const r = await adminPostJsonData<{ok: boolean; doc?: NewsDoc; error?: string}>(
+        '/api/admin/news-fetch',
         {id: docId},
       )
       if (cancelled) return
@@ -190,17 +161,13 @@ function FabricationEditForm({
     if (!doc) return
     setBusy(true)
     const form = e.currentTarget
-    const year = (form.elements.namedItem('year') as HTMLInputElement | null)?.value ?? ''
     const title = (form.elements.namedItem('title') as HTMLInputElement | null)?.value ?? ''
-    const subTitle = (form.elements.namedItem('sub_title') as HTMLInputElement | null)?.value ?? ''
-    const category = (form.elements.namedItem('category') as HTMLInputElement | null)?.value ?? ''
+    const date = (form.elements.namedItem('date') as HTMLInputElement | null)?.value ?? ''
     const body = (form.elements.namedItem('body') as HTMLTextAreaElement | null)?.value ?? ''
     const fd = new FormData()
     fd.append('_id', doc._id)
-    fd.append('year', year)
     fd.append('title', title)
-    fd.append('sub_title', subTitle)
-    fd.append('category', category)
+    fd.append('date', date)
     fd.append('body', body)
     fd.append('remove_image_indexes', [...rmImg].sort((a, b) => a - b).join(','))
     const ser = serializeSlotsForMultipart(imgSlots, rmImg)
@@ -210,7 +177,7 @@ function FabricationEditForm({
     }
     try {
       const fdOut = await formDataWithResizedImages(fd)
-      const r = await adminPostMultipart('/api/admin/fabrication-update', fdOut)
+      const r = await adminPostMultipart('/api/admin/news-update', fdOut)
       if (r.ok) {
         showAdminToast('Saved successfully.', 'success')
         onSaved()
@@ -246,22 +213,23 @@ function FabricationEditForm({
       className="space-y-4 rounded-lg border border-border bg-muted/20 p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-foreground">Edit Fabrication</p>
+        <p className="text-sm font-medium text-foreground">Edit News</p>
         <button type="button" onClick={onClose} className="text-sm text-muted-foreground underline-offset-4 hover:underline">
           Close
         </button>
       </div>
-      <Field label="Year" htmlFor={`${formId}-year`}>
-        <input id={`${formId}-year`} name="year" required defaultValue={doc.year ?? ''} className={fieldClass} />
-      </Field>
       <Field label="Title" htmlFor={`${formId}-title`}>
         <input id={`${formId}-title`} name="title" required defaultValue={doc.title ?? ''} className={fieldClass} />
       </Field>
-      <Field label="Subtitle (sub_title)" htmlFor={`${formId}-sub`}>
-        <input id={`${formId}-sub`} name="sub_title" defaultValue={doc.subTitle ?? ''} className={fieldClass} />
-      </Field>
-      <Field label="Category" htmlFor={`${formId}-cat`}>
-        <input id={`${formId}-cat`} name="category" defaultValue={doc.category ?? ''} className={fieldClass} />
+      <Field label="Date" htmlFor={`${formId}-date`}>
+        <input
+          id={`${formId}-date`}
+          name="date"
+          type="date"
+          required
+          defaultValue={dateInputValue(doc.publishedAt)}
+          className={fieldClass}
+        />
       </Field>
       <Field label="Body" htmlFor={`${formId}-body`}>
         <textarea
@@ -312,7 +280,7 @@ function FabricationEditForm({
   )
 }
 
-export default function FabricationArchivePanel() {
+export default function NewsArchivePanel() {
   const [items, setItems] = useState<Row[]>([])
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -321,7 +289,7 @@ export default function FabricationArchivePanel() {
   const load = useCallback(async () => {
     setLoading(true)
     setErr(null)
-    const r = await adminGetJson<{ok: boolean; items: Row[]}>('/api/admin/fabrication-list')
+    const r = await adminGetJson<{ok: boolean; items: Row[]}>('/api/admin/news-list')
     if (!r.ok || !r.data?.items) {
       setErr(r.error ?? 'Unable to load the list.')
       setItems([])
@@ -337,38 +305,10 @@ export default function FabricationArchivePanel() {
     })
   }, [load])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {activationConstraint: {distance: 6}}),
-    useSensor(KeyboardSensor, {coordinateGetter: sortableKeyboardCoordinates}),
-  )
-
-  const onDragEnd = async (event: DragEndEvent) => {
-    const {active, over} = event
-    if (!over || active.id === over.id) return
-    const oldIndex = items.findIndex((x) => x._id === active.id)
-    const newIndex = items.findIndex((x) => x._id === over.id)
-    if (oldIndex < 0 || newIndex < 0) return
-    const prev = items
-    const next = arrayMove(items, oldIndex, newIndex)
-    setItems(next)
-    setErr(null)
-    const save = await adminPostJson('/api/admin/fabrication-reorder', {
-      ids: next.map((x) => x._id),
-    })
-    if (!save.ok) {
-      const why = save.error ?? 'Failed to save order.'
-      setErr(why)
-      showAdminToast(why, 'error')
-      setItems(prev)
-    } else {
-      showAdminToast('Order saved.', 'success')
-    }
-  }
-
   const onDelete = async (id: string, title: string) => {
     if (!window.confirm(`Delete "${title}"? This will be permanently removed from Sanity.`)) return
     setErr(null)
-    const r = await adminPostJson('/api/admin/fabrication-delete', {id})
+    const r = await adminPostJson('/api/admin/news-delete', {id})
     if (!r.ok) {
       const why = r.error ?? 'Delete failed.'
       setErr(why)
@@ -385,10 +325,10 @@ export default function FabricationArchivePanel() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <p className="text-sm leading-relaxed text-foreground/75">
-        Items appear on the Fabrication page from top to bottom. Drag the handle to reorder, and use each row’s buttons to edit or delete.
+      Displayed in the latest order of date. If you edit the order of text, date, and image in Edit and then save, it will be reflected in Front News.
       </p>
       {editingId ? (
-        <FabricationEditForm
+        <NewsEditForm
           docId={editingId}
           onClose={() => setEditingId(null)}
           onSaved={() => {
@@ -398,24 +338,20 @@ export default function FabricationArchivePanel() {
         />
       ) : null}
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No Fabrication items found.</p>
+        <p className="text-sm text-muted-foreground">No news posts found.</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={items.map((i) => i._id)} strategy={verticalListSortingStrategy}>
-            <ul className="flex min-w-0 list-none flex-col gap-2 p-0">
-              {items.map((row) => (
-                <li key={row._id} className="min-w-0">
-                  <SortRow
-                    id={row._id}
-                    title={row.title ?? '(Untitled)'}
-                    onEdit={() => setEditingId(row._id)}
-                    onDelete={() => void onDelete(row._id, row.title ?? '(Untitled)')}
-                  />
-                </li>
-              ))}
-            </ul>
-          </SortableContext>
-        </DndContext>
+        <ul className="flex min-w-0 list-none flex-col gap-2 p-0">
+          {items.map((row) => (
+            <li key={row._id} className="min-w-0">
+              <ListRow
+                title={row.title ?? '(Untitled)'}
+                subtitle={row.publishedAt ? row.publishedAt.slice(0, 10) : ''}
+                onEdit={() => setEditingId(row._id)}
+                onDelete={() => void onDelete(row._id, row.title ?? '(Untitled)')}
+              />
+            </li>
+          ))}
+        </ul>
       )}
       {err ? (
         <p className="whitespace-pre-wrap break-words text-sm text-destructive" role="alert">

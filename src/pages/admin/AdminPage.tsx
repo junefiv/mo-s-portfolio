@@ -10,6 +10,7 @@ import {
 import {formDataWithResizedImages} from '@/lib/adminImageResize'
 import AdminToastListener from './AdminToastListener'
 import FabricationArchivePanel from './FabricationArchivePanel'
+import NewsArchivePanel from './NewsArchivePanel'
 import WorkArchivePanel from './WorkArchivePanel'
 
 const fieldClass =
@@ -28,6 +29,7 @@ export default function AdminPage() {
       : false,
   )
   const [tab, setTab] = useState<Tab>('news')
+  const [newsSub, setNewsSub] = useState<SectionSub>('new')
   const [workSub, setWorkSub] = useState<SectionSub>('new')
   const [fabSub, setFabSub] = useState<SectionSub>('new')
 
@@ -143,6 +145,7 @@ export default function AdminPage() {
                   aria-selected={tab === id}
                   onClick={() => {
                     setTab(id)
+                    if (id === 'news') setNewsSub('new')
                     if (id === 'work') setWorkSub('new')
                     if (id === 'fabrication') setFabSub('new')
                   }}
@@ -156,6 +159,36 @@ export default function AdminPage() {
                 </button>
               ))}
             </div>
+
+            {tab === 'news' ? (
+              <div
+                role="tablist"
+                aria-label="News submenu"
+                className="flex min-w-0 flex-wrap gap-2 border-b border-border pb-3"
+              >
+                {(
+                  [
+                    ['new', 'New'],
+                    ['archive', 'Archive · Edit'],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={newsSub === id}
+                    onClick={() => setNewsSub(id)}
+                    className={`rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm ${
+                      newsSub === id
+                        ? 'bg-secondary text-secondary-foreground'
+                        : 'bg-muted/40 text-foreground/75 hover:bg-muted/70'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             {tab === 'work' ? (
               <div
@@ -217,7 +250,8 @@ export default function AdminPage() {
               </div>
             ) : null}
 
-            {tab === 'news' ? <NewsForm /> : null}
+            {tab === 'news' && newsSub === 'new' ? <NewsForm /> : null}
+            {tab === 'news' && newsSub === 'archive' ? <NewsArchivePanel /> : null}
             {tab === 'work' && workSub === 'new' ? <WorkForm /> : null}
             {tab === 'work' && workSub === 'archive' ? <WorkArchivePanel /> : null}
             {tab === 'fabrication' && fabSub === 'new' ? <FabricationForm /> : null}
@@ -259,6 +293,9 @@ function NewsForm() {
 
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
+      <p className="text-sm text-muted-foreground">
+        기존 글·이미지 순서 수정은 상단 탭에서 News → Archive · Edit로 이동하세요.
+      </p>
       <Field label="Title" htmlFor={`${id}-title`}>
         <input id={`${id}-title`} name="title" required className={fieldClass} />
       </Field>

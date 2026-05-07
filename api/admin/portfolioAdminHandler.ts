@@ -259,6 +259,101 @@ function removeByIndices<T>(arr: T[], indices: number[]): T[] {
   return copy
 }
 
+/** Admin UI: JSON of `{t:'e',i:number}|{t:'p',n:number}` — existing index + new file ordinal */
+type ImageSlotToken = {t: 'e'; i: number} | {t: 'p'; n: number}
+
+function parseImageSlotsField(raw: string): ImageSlotToken[] | undefined {
+  const t = raw.trim()
+  if (!t) return undefined
+  try {
+    const v = JSON.parse(t) as unknown
+    if (!Array.isArray(v)) return undefined
+    const out: ImageSlotToken[] = []
+    for (const x of v) {
+      if (!x || typeof x !== 'object') return undefined
+      const o = x as {t?: unknown; i?: unknown; n?: unknown}
+      if (o.t === 'e') {
+        const i =
+          typeof o.i === 'number' && Number.isInteger(o.i)
+            ? o.i
+            : parseInt(String(o.i ?? ''), 10)
+        if (!Number.isInteger(i) || i < 0) return undefined
+        out.push({t: 'e', i})
+      } else if (o.t === 'p') {
+        const n =
+          typeof o.n === 'number' && Number.isInteger(o.n)
+            ? o.n
+            : parseInt(String(o.n ?? ''), 10)
+        if (!Number.isInteger(n) || n < 0) return undefined
+        out.push({t: 'p', n})
+      } else {
+        return undefined
+      }
+    }
+    return out
+  } catch {
+    return undefined
+  }
+}
+
+function buildImageRowFromSlots<T>(
+  curRow: T[],
+  rmOrigIndexes: number[],
+  newBlocks: T[],
+  slots: ImageSlotToken[],
+  label: string,
+): {ok: true; row: T[]} | {ok: false; error: string} {
+  const rmSet = new Set(
+    rmOrigIndexes.filter((i) => Number.isInteger(i) && i >= 0 && i < curRow.length),
+  )
+  const byOrig = new Map<number, T>()
+  curRow.forEach((block, idx) => byOrig.set(idx, block))
+  const keptOrig = new Set<number>()
+  for (let i = 0; i < curRow.length; i++) {
+    if (!rmSet.has(i)) keptOrig.add(i)
+  }
+  const eSlots = slots.filter((s): s is {t: 'e'; i: number} => s.t === 'e')
+  const uniqueE = new Set(eSlots.map((s) => s.i))
+  if (uniqueE.size !== eSlots.length) {
+    return {ok: false, error: `${label}: duplicate existing slot index.`}
+  }
+  for (const i of uniqueE) {
+    if (!keptOrig.has(i)) {
+      return {ok: false, error: `${label}: slot references removed or invalid index ${i}.`}
+    }
+  }
+  if (eSlots.length !== keptOrig.size) {
+    return {ok: false, error: `${label}: existing image count mismatch (kept vs slot).`}
+  }
+  const pSlots = slots.filter((s): s is {t: 'p'; n: number} => s.t === 'p')
+  if (pSlots.length !== newBlocks.length) {
+    return {ok: false, error: `${label}: new image count does not match slot p entries.`}
+  }
+  const pIndices = new Set(pSlots.map((s) => s.n))
+  for (let n = 0; n < newBlocks.length; n++) {
+    if (!pIndices.has(n)) {
+      return {ok: false, error: `${label}: missing new file slot index ${n}.`}
+    }
+  }
+  const row: T[] = []
+  for (const s of slots) {
+    if (s.t === 'e') {
+      const b = byOrig.get(s.i)
+      if (b === undefined) {
+        return {ok: false, error: `${label}: missing block for index ${s.i}.`}
+      }
+      row.push(b)
+    } else {
+      const b = newBlocks[s.n]
+      if (b === undefined) {
+        return {ok: false, error: `${label}: missing uploaded file ${s.n}.`}
+      }
+      row.push(b)
+    }
+  }
+  return {ok: true, row}
+}
+
 async function applyReorderRanks(
   client: SanityClient,
   ids: string[],
@@ -359,6 +454,13 @@ export class PortfolioAdminApi {
           json(res, 200, {ok: true, items})
           return
         }
+        if (pathname === '/api/admin/news-list') {
+          const items = await client.fetch<
+            Array<{_id: string; title: string | null; publishedAt: string | null}>
+          >(`*[_type == "newsPost"] | order(publishedAt desc) { _id, title, publishedAt }`)
+          json(res, 200, {ok: true, items})
+          return
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e)
         json(res, 500, {ok: false, error: formatSanityClientError(msg)})
@@ -385,7 +487,11 @@ export class PortfolioAdminApi {
         return
       }
 
-      if (pathname === '/api/admin/work-fetch' || pathname === '/api/admin/fabrication-fetch') {
+      if (
+        pathname === '/api/admin/work-fetch' ||
+        pathname === '/api/admin/fabrication-fetch' ||
+        pathname === '/api/admin/news-fetch'
+      ) {
         const body = (await readJsonBody(req)) as Record<string, unknown> | null
         if (!verifySecret(req, adminEnv, body ?? undefined)) {
           json(res, 401, {ok: false, error: 'Authentication required.'})
@@ -424,20 +530,44 @@ export class PortfolioAdminApi {
             json(res, 200, {ok: true, doc})
             return
           }
+          if (pathname === '/api/admin/fabrication-fetch') {
+            const doc = await client.fetch<
+              | {
+                  _id: string
+                  year: string | null
+                  title: string | null
+                  subTitle: string | null
+                  category: string | null
+                  body: string | null
+                  images: (string | null)[] | null
+                }
+              | null
+            >(
+              `*[_id == $id && _type == "fabricationEntry"][0]{
+              _id, year, title, subTitle, category, body,
+              "images": images[].asset->url
+            }`,
+              {id: docId},
+            )
+            if (!doc) {
+              json(res, 404, {ok: false, error: 'Document not found.'})
+              return
+            }
+            json(res, 200, {ok: true, doc})
+            return
+          }
           const doc = await client.fetch<
             | {
                 _id: string
-                year: string | null
                 title: string | null
-                subTitle: string | null
-                category: string | null
+                publishedAt: string | null
                 body: string | null
                 images: (string | null)[] | null
               }
             | null
           >(
-            `*[_id == $id && _type == "fabricationEntry"][0]{
-              _id, year, title, subTitle, category, body,
+            `*[_id == $id && _type == "newsPost"][0]{
+              _id, title, publishedAt, body,
               "images": images[].asset->url
             }`,
             {id: docId},
@@ -455,7 +585,11 @@ export class PortfolioAdminApi {
         }
       }
 
-      if (pathname === '/api/admin/work-delete' || pathname === '/api/admin/fabrication-delete') {
+      if (
+        pathname === '/api/admin/work-delete' ||
+        pathname === '/api/admin/fabrication-delete' ||
+        pathname === '/api/admin/news-delete'
+      ) {
         const body = (await readJsonBody(req)) as Record<string, unknown> | null
         if (!verifySecret(req, adminEnv, body ?? undefined)) {
           json(res, 401, {ok: false, error: 'Authentication required.'})
@@ -467,7 +601,12 @@ export class PortfolioAdminApi {
           return
         }
         try {
-          const tp = pathname === '/api/admin/work-delete' ? 'workProject' : 'fabricationEntry'
+          const tp =
+            pathname === '/api/admin/work-delete'
+              ? 'workProject'
+              : pathname === '/api/admin/fabrication-delete'
+                ? 'fabricationEntry'
+                : 'newsPost'
           const exists = await client.fetch<string | null>(
             `*[_id == $id && _type == $tp][0]._id`,
             {id: docId, tp},
@@ -505,6 +644,7 @@ export class PortfolioAdminApi {
 
       if (
         pathname === '/api/admin/news' ||
+        pathname === '/api/admin/news-update' ||
         pathname === '/api/admin/work' ||
         pathname === '/api/admin/fabrication' ||
         pathname === '/api/admin/work-update' ||
@@ -517,10 +657,13 @@ export class PortfolioAdminApi {
         ) => {
           const reqM = rq as MReq
           const resM = rs as ServerResponse
-          if (pathname === '/api/admin/news') this.getNewsMulter()(reqM as never, resM as never, cb)
-          else if (pathname === '/api/admin/work' || pathname === '/api/admin/work-update')
+          if (pathname === '/api/admin/news' || pathname === '/api/admin/news-update') {
+            this.getNewsMulter()(reqM as never, resM as never, cb)
+          } else if (pathname === '/api/admin/work' || pathname === '/api/admin/work-update') {
             this.getWorkMulter()(reqM as never, resM as never, cb)
-          else this.getFabMulter()(reqM as never, resM as never, cb)
+          } else {
+            this.getFabMulter()(reqM as never, resM as never, cb)
+          }
         }
         await runMulter(req, res, parseMultipart)
 
@@ -617,12 +760,26 @@ export class PortfolioAdminApi {
             return
           }
           const fileMap = rq.files as {[fieldname: string]: UploadedFile[]} | undefined
-          const newLeft = fileMap?.imagesLeft
-          const newRight = fileMap?.imagesRight
+          const newLeftRaw = fileMap?.imagesLeft
+          const newRightRaw = fileMap?.imagesRight
+          const newLeftArr = Array.isArray(newLeftRaw) ? newLeftRaw : []
+          const newRightArr = Array.isArray(newRightRaw) ? newRightRaw : []
           const rmL = parseIndexCsv(firstField(body, 'remove_left_indexes'))
           const rmR = parseIndexCsv(firstField(body, 'remove_right_indexes'))
-          const hasImageChange =
-            rmL.length > 0 || rmR.length > 0 || (newLeft?.length ?? 0) > 0 || (newRight?.length ?? 0) > 0
+          const rawLeftSlots = firstField(body, 'left_slots')
+          const rawRightSlots = firstField(body, 'right_slots')
+          const leftSlots = parseImageSlotsField(rawLeftSlots)
+          const rightSlots = parseImageSlotsField(rawRightSlots)
+          const slotsBothSent = rawLeftSlots.trim().length > 0 && rawRightSlots.trim().length > 0
+          const useSlotMode =
+            slotsBothSent && leftSlots !== undefined && rightSlots !== undefined
+          if (slotsBothSent && !useSlotMode) {
+            json(res, 400, {ok: false, error: 'Invalid left_slots or right_slots JSON.'})
+            return
+          }
+          const legacyImageChange =
+            rmL.length > 0 || rmR.length > 0 || newLeftArr.length > 0 || newRightArr.length > 0
+          const patchImages = useSlotMode || legacyImageChange
 
           const setDoc: Record<string, unknown> = {
             title,
@@ -632,7 +789,7 @@ export class PortfolioAdminApi {
           if (subTitle) setDoc.subTitle = subTitle
           else setDoc.subTitle = ''
 
-          if (hasImageChange) {
+          if (patchImages) {
             const cur = await client.fetch<{
               imagesLeft: Array<Record<string, unknown>> | null
               imagesRight: Array<Record<string, unknown>> | null
@@ -641,17 +798,38 @@ export class PortfolioAdminApi {
               json(res, 404, {ok: false, error: 'Document not found.'})
               return
             }
-            let leftArr = [...(cur.imagesLeft ?? [])]
-            let rightArr = [...(cur.imagesRight ?? [])]
-            leftArr = removeByIndices(leftArr, rmL)
-            rightArr = removeByIndices(rightArr, rmR)
-            if (newLeft?.length) {
-              const up = await uploadImages(client, newLeft)
-              leftArr = [...leftArr, ...up]
-            }
-            if (newRight?.length) {
-              const up = await uploadImages(client, newRight)
-              rightArr = [...rightArr, ...up]
+            const curL = [...(cur.imagesLeft ?? [])]
+            const curR = [...(cur.imagesRight ?? [])]
+            let leftArr: Array<Record<string, unknown>>
+            let rightArr: Array<Record<string, unknown>>
+            if (useSlotMode) {
+              const upL = newLeftArr.length ? await uploadImages(client, newLeftArr) : []
+              const upR = newRightArr.length ? await uploadImages(client, newRightArr) : []
+              const bl = buildImageRowFromSlots(curL, rmL, upL, leftSlots!, 'Drawings (left)')
+              if (!bl.ok) {
+                json(res, 400, {ok: false, error: bl.error})
+                return
+              }
+              const br = buildImageRowFromSlots(curR, rmR, upR, rightSlots!, 'Artwork (right)')
+              if (!br.ok) {
+                json(res, 400, {ok: false, error: br.error})
+                return
+              }
+              leftArr = bl.row
+              rightArr = br.row
+            } else {
+              leftArr = curL
+              rightArr = curR
+              leftArr = removeByIndices(leftArr, rmL)
+              rightArr = removeByIndices(rightArr, rmR)
+              if (newLeftArr.length) {
+                const up = await uploadImages(client, newLeftArr)
+                leftArr = [...leftArr, ...up]
+              }
+              if (newRightArr.length) {
+                const up = await uploadImages(client, newRightArr)
+                rightArr = [...rightArr, ...up]
+              }
             }
             if (!leftArr.length || !rightArr.length) {
               json(res, 400, {
@@ -727,8 +905,18 @@ export class PortfolioAdminApi {
             return
           }
           const filesFab = rq.files as UploadedFile[] | undefined
+          const fabFiles = Array.isArray(filesFab) ? filesFab : []
           const rmImg = parseIndexCsv(firstField(body, 'remove_image_indexes'))
-          const hasImageChange = rmImg.length > 0 || (filesFab?.length ?? 0) > 0
+          const rawImgSlots = firstField(body, 'image_slots')
+          const imgSlots = parseImageSlotsField(rawImgSlots)
+          const slotsSent = rawImgSlots.trim().length > 0
+          const useSlotMode = slotsSent && imgSlots !== undefined
+          if (slotsSent && !useSlotMode) {
+            json(res, 400, {ok: false, error: 'Invalid image_slots JSON.'})
+            return
+          }
+          const legacyImageChange = rmImg.length > 0 || fabFiles.length > 0
+          const patchImages = useSlotMode || legacyImageChange
 
           const setFab: Record<string, unknown> = {
             year,
@@ -741,7 +929,7 @@ export class PortfolioAdminApi {
           if (category) setFab.category = category
           else setFab.category = ''
 
-          if (hasImageChange) {
+          if (patchImages) {
             const cur = await client.fetch<{images: Array<Record<string, unknown>> | null} | null>(
               `*[_id == $id && _type == "fabricationEntry"][0]{ images }`,
               {id: docId},
@@ -750,11 +938,28 @@ export class PortfolioAdminApi {
               json(res, 404, {ok: false, error: 'Document not found.'})
               return
             }
-            let imgArr = [...(cur.images ?? [])]
-            imgArr = removeByIndices(imgArr, rmImg)
-            if (filesFab?.length) {
-              const up = await uploadImages(client, filesFab)
-              imgArr = [...imgArr, ...up]
+            let imgArr: Array<Record<string, unknown>>
+            if (useSlotMode) {
+              const up = fabFiles.length ? await uploadImages(client, fabFiles) : []
+              const b = buildImageRowFromSlots(
+                [...(cur.images ?? [])],
+                rmImg,
+                up,
+                imgSlots!,
+                'Fabrication images',
+              )
+              if (!b.ok) {
+                json(res, 400, {ok: false, error: b.error})
+                return
+              }
+              imgArr = b.row
+            } else {
+              imgArr = [...(cur.images ?? [])]
+              imgArr = removeByIndices(imgArr, rmImg)
+              if (fabFiles.length) {
+                const up = await uploadImages(client, fabFiles)
+                imgArr = [...imgArr, ...up]
+              }
             }
             if (!imgArr.length) {
               json(res, 400, {
@@ -767,6 +972,95 @@ export class PortfolioAdminApi {
           }
 
           await client.patch(docId).set(setFab).commit()
+          json(res, 200, {ok: true, id: docId})
+          return
+        }
+
+        if (pathname === '/api/admin/news-update') {
+          const docId = firstField(body, '_id')
+          if (!docId) {
+            json(res, 400, {ok: false, error: '_id is required.'})
+            return
+          }
+          const exists = await client.fetch<string | null>(
+            `*[_id == $id && _type == "newsPost"][0]._id`,
+            {id: docId},
+          )
+          if (!exists) {
+            json(res, 404, {ok: false, error: 'Document not found.'})
+            return
+          }
+          const title = firstField(body, 'title')
+          const date = firstField(body, 'date')
+          const textBody = firstField(body, 'body')
+          if (!title || !date || !textBody) {
+            json(res, 400, {ok: false, error: 'title, date, and body are required.'})
+            return
+          }
+          const filesNews = rq.files as UploadedFile[] | undefined
+          const newsFiles = Array.isArray(filesNews) ? filesNews : []
+          const rmImg = parseIndexCsv(firstField(body, 'remove_image_indexes'))
+          const rawImgSlots = firstField(body, 'image_slots')
+          const imgSlots = parseImageSlotsField(rawImgSlots)
+          const slotsSent = rawImgSlots.trim().length > 0
+          const useSlotMode = slotsSent && imgSlots !== undefined
+          if (slotsSent && !useSlotMode) {
+            json(res, 400, {ok: false, error: 'Invalid image_slots JSON.'})
+            return
+          }
+          const legacyImageChange = rmImg.length > 0 || newsFiles.length > 0
+          const patchImages = useSlotMode || legacyImageChange
+
+          const setNews: Record<string, unknown> = {
+            title,
+            body: textBody,
+            publishedAt: date,
+            slug: {_type: 'slug', current: makeSlug(title)},
+          }
+
+          if (patchImages) {
+            const cur = await client.fetch<{images: Array<Record<string, unknown>> | null} | null>(
+              `*[_id == $id && _type == "newsPost"][0]{ images }`,
+              {id: docId},
+            )
+            if (!cur) {
+              json(res, 404, {ok: false, error: 'Document not found.'})
+              return
+            }
+            let imgArr: Array<Record<string, unknown>>
+            if (useSlotMode) {
+              const up = newsFiles.length ? await uploadImages(client, newsFiles) : []
+              const b = buildImageRowFromSlots(
+                [...(cur.images ?? [])],
+                rmImg,
+                up,
+                imgSlots!,
+                'News images',
+              )
+              if (!b.ok) {
+                json(res, 400, {ok: false, error: b.error})
+                return
+              }
+              imgArr = b.row
+            } else {
+              imgArr = [...(cur.images ?? [])]
+              imgArr = removeByIndices(imgArr, rmImg)
+              if (newsFiles.length) {
+                const up = await uploadImages(client, newsFiles)
+                imgArr = [...imgArr, ...up]
+              }
+            }
+            if (!imgArr.length) {
+              json(res, 400, {
+                ok: false,
+                error: 'At least one image is required. Check your remove/add changes and try again.',
+              })
+              return
+            }
+            setNews.images = imgArr
+          }
+
+          await client.patch(docId).set(setNews).commit()
           json(res, 200, {ok: true, id: docId})
           return
         }
