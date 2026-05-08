@@ -5,6 +5,8 @@ import {fetchWorkProjects} from '@/lib/workFromSanity'
 
 /** `@theme` md와 동일: 라이트박스는 md 이상에서만 */
 const MD_MIN_WIDTH = '(min-width: 48rem)'
+/** `@theme` lg와 동일: 우측 고정 레일은 lg 이상, 그 아래는 드로어 */
+const LG_MIN_WIDTH = '(min-width: 64rem)'
 
 function useMdUp() {
   const [mdUp, setMdUp] = useState(false)
@@ -16,6 +18,18 @@ function useMdUp() {
     return () => mq.removeEventListener('change', on)
   }, [])
   return mdUp
+}
+
+function useLgUp() {
+  const [lgUp, setLgUp] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia(LG_MIN_WIDTH)
+    const on = () => setLgUp(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return lgUp
 }
 
 /** 스크롤 멈춘 뒤 이만큼 유지 후 WORK 목록 페이드아웃 */
@@ -164,6 +178,10 @@ export default function Work() {
   const railButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const lgUp = useLgUp()
+  const [workDrawerOpen, setWorkDrawerOpen] = useState(false)
+  const drawerHeaderDragRef = useRef<number | null>(null)
+
   const scheduleRailHide = useCallback(() => {
     setIsScrolling(true)
     if (scrollTimeoutRef.current) {
@@ -228,7 +246,7 @@ export default function Work() {
 
   useEffect(() => {
     const handleWindowScroll = () => {
-      scheduleRailHide()
+      if (lgUp) scheduleRailHide()
 
       const scrollPosition = window.scrollY + window.innerHeight / 2
 
@@ -250,7 +268,7 @@ export default function Work() {
         clearTimeout(scrollTimeoutRef.current)
       }
     }
-  }, [scheduleRailHide, projects])
+  }, [scheduleRailHide, projects, lgUp])
 
   /** 터치 끝은 레일 밖에서 일어날 수 있어 window에서 해제 */
   useEffect(() => {
@@ -265,6 +283,28 @@ export default function Work() {
       window.removeEventListener('pointercancel', end, {capture: true})
     }
   }, [railPointerActive])
+
+  useEffect(() => {
+    if (lgUp) setWorkDrawerOpen(false)
+  }, [lgUp])
+
+  useEffect(() => {
+    if (lgUp || !workDrawerOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [workDrawerOpen, lgUp])
+
+  useEffect(() => {
+    if (lgUp || !workDrawerOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setWorkDrawerOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [workDrawerOpen, lgUp])
 
   /** 스크롤에 따라 active가 바뀌면, 고정 레일 안에서도 해당 버튼이 잘리지 않게 맞춤 */
   useEffect(() => {
@@ -281,8 +321,26 @@ export default function Work() {
 
   const railVisible = isScrolling || railHover || railPointerActive
 
+  const renderProjectNavButtons = (afterPick?: () => void) =>
+    projects.map((project, index) => (
+      <button
+        key={project.id}
+        ref={(el) => {
+          railButtonRefs.current[index] = el
+        }}
+        type="button"
+        onClick={() => {
+          scrollToProject(index)
+          afterPick?.()
+        }}
+        className={railButtonClassName(activeProject === index)}
+      >
+        {project.title}
+      </button>
+    ))
+
   const workProjectRail =
-    projects.length > 0 ? (
+    projects.length > 0 && lgUp ? (
       <div
         onPointerEnter={() => setRailHover(true)}
         onPointerLeave={() => setRailHover(false)}
@@ -299,21 +357,106 @@ export default function Work() {
           onScroll={scheduleRailHide}
           className="flex min-h-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] touch-pan-y flex-col items-end gap-1 overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
         >
-          {projects.map((project, index) => (
-            <button
-              key={project.id}
-              ref={(el) => {
-                railButtonRefs.current[index] = el
-              }}
-              type="button"
-              onClick={() => scrollToProject(index)}
-              className={railButtonClassName(activeProject === index)}
-            >
-              {project.title}
-            </button>
-          ))}
+          {renderProjectNavButtons()}
         </nav>
       </div>
+    ) : null
+
+  const workMobileDrawer =
+    projects.length > 0 && !lgUp ? (
+      <>
+        <div
+          role="presentation"
+          aria-hidden={!workDrawerOpen}
+          className={`fixed inset-0 z-[198] bg-black/35 transition-opacity duration-300 ease-out ${
+            workDrawerOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+          onClick={() => setWorkDrawerOpen(false)}
+        />
+        <div
+          id="work-project-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="WORK 작품 목록"
+          aria-hidden={!workDrawerOpen}
+          className={`fixed inset-y-0 right-0 z-[200] flex w-[min(20rem,calc(100vw-2rem))] max-w-[88vw] flex-col border-l border-border/50 bg-background/95 pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] shadow-2xl backdrop-blur-md transition-transform duration-300 ease-out ${
+            workDrawerOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+          }`}
+        >
+          <div
+            className="flex shrink-0 cursor-grab touch-pan-x items-center justify-between gap-2 border-b border-border/40 px-3 py-3 active:cursor-grabbing"
+            onPointerDown={(e) => {
+              drawerHeaderDragRef.current = e.clientX
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }}
+            onPointerMove={(e) => {
+              const start = drawerHeaderDragRef.current
+              if (start == null) return
+              if (e.clientX - start > 64) {
+                drawerHeaderDragRef.current = null
+                try {
+                  e.currentTarget.releasePointerCapture(e.pointerId)
+                } catch {
+                  /* already released */
+                }
+                setWorkDrawerOpen(false)
+              }
+            }}
+            onPointerUp={(e) => {
+              drawerHeaderDragRef.current = null
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId)
+              } catch {
+                /* noop */
+              }
+            }}
+            onPointerCancel={(e) => {
+              drawerHeaderDragRef.current = null
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId)
+              } catch {
+                /* noop */
+              }
+            }}
+          >
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              WORK
+            </span>
+            <button
+              type="button"
+              className="inline-flex h-9 min-w-9 items-center justify-center rounded-md text-foreground/80 hover:bg-foreground/[0.06] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/25"
+              aria-label="목록 닫기"
+              onClick={() => setWorkDrawerOpen(false)}
+            >
+              <span className="text-xl leading-none" aria-hidden>
+                ×
+              </span>
+            </button>
+          </div>
+          <nav
+            aria-label="WORK project list"
+            className="flex min-h-0 flex-1 touch-pan-y flex-col items-end gap-1 overflow-y-auto overscroll-y-contain px-3 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
+          >
+            {renderProjectNavButtons(() => setWorkDrawerOpen(false))}
+          </nav>
+        </div>
+        {!workDrawerOpen ? (
+          <div className="pointer-events-none fixed right-0 top-1/2 z-[199] -translate-y-1/2 pl-1 pr-[max(6px,env(safe-area-inset-right,0px))]">
+            <button
+              type="button"
+              aria-expanded={false}
+              aria-controls="work-project-drawer"
+              onClick={() => setWorkDrawerOpen(true)}
+              className="pointer-events-auto inline-flex w-fit min-h-[4.5rem] shrink-0 items-center justify-center rounded-l-xl border border-black/15 border-r-0 bg-white/90 px-1 py-2 text-neutral-950 shadow-lg backdrop-blur-sm transition-transform active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
+              aria-label="작품 목록 열기"
+            >
+              <span className="text-lg font-semibold leading-none text-neutral-950/90" aria-hidden>
+                ‹
+              </span>
+            </button>
+          </div>
+        ) : null}
+      </>
     ) : null
 
   if (loadErr) {
@@ -362,6 +505,7 @@ export default function Work() {
         </div>
       </div>
       {workProjectRail ? createPortal(workProjectRail, document.body) : null}
+      {workMobileDrawer ? createPortal(workMobileDrawer, document.body) : null}
     </>
   )
 }
