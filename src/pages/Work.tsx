@@ -450,7 +450,7 @@ export default function Work() {
               className="pointer-events-auto inline-flex w-fit min-h-[4.5rem] shrink-0 items-center justify-center rounded-l-xl border border-black/15 border-r-0 bg-white/90 px-1 py-2 text-neutral-950 shadow-lg backdrop-blur-sm transition-transform active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
               aria-label="작품 목록 열기"
             >
-              <span className="text-lg font-semibold leading-none text-neutral-950/90" aria-hidden>
+              <span className="text-xl font-semibold leading-none text-neutral-950/90" aria-hidden>
                 ‹
               </span>
             </button>
