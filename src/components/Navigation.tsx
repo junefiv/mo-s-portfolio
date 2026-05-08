@@ -215,7 +215,7 @@ export default function Navigation() {
             */}
             <ul
               ref={measureRef}
-              className="invisible pointer-events-none absolute -z-10 flex w-full min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:gap-x-6"
+              className="invisible pointer-events-none absolute -z-10 flex w-full min-w-0 flex-wrap items-center justify-between gap-y-2 sm:justify-start sm:gap-x-8 sm:gap-y-2"
               aria-hidden
             >
               {links.map((link) => (
@@ -307,7 +307,7 @@ export default function Navigation() {
                 </div>
               </div>
             ) : (
-              <ul className="relative z-10 flex w-full min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:gap-x-6">
+              <ul className="relative z-10 flex w-full min-w-0 flex-wrap items-center justify-between gap-y-2 sm:justify-start sm:gap-x-8 sm:gap-y-2">
                 {links.map((link) => {
                   const active = isActive(link.path)
                   return (
