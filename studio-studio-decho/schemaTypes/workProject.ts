@@ -38,6 +38,12 @@ export default defineType({
       description: '두 번째 부제 (같은 스타일, 다음 줄에 표시)',
     }),
     defineField({
+      name: 'subTitle3',
+      title: 'Subtitle 3',
+      type: 'string',
+      description: '세 번째 부제 (부제 1·2와 동일 스타일, 그 아래 줄)',
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'text',

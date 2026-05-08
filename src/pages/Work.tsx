@@ -38,6 +38,7 @@ type WorkProject = {
   title: string
   subTitle1: string
   subTitle2: string
+  subTitle3: string
   body: string
   imagesLeft: string[]
   imagesRight: string[]
@@ -81,13 +82,16 @@ function WorkProjectSet({
       >
         <div className="min-w-0">
           <h3 className="text-xl leading-tight">{project.title}</h3>
-          {project.subTitle1 || project.subTitle2 ? (
+          {project.subTitle1 || project.subTitle2 || project.subTitle3 ? (
             <div className="mt-1 space-y-0">
               {project.subTitle1 ? (
                 <p className="text-sm leading-relaxed text-muted-foreground">{project.subTitle1}</p>
               ) : null}
               {project.subTitle2 ? (
                 <p className="text-sm leading-relaxed text-muted-foreground">{project.subTitle2}</p>
+              ) : null}
+              {project.subTitle3 ? (
+                <p className="text-sm leading-relaxed text-muted-foreground">{project.subTitle3}</p>
               ) : null}
             </div>
           ) : null}
@@ -189,6 +193,7 @@ export default function Work() {
             title: r.title ?? '',
             subTitle1: r.subTitle1 ?? '',
             subTitle2: r.subTitle2 ?? '',
+            subTitle3: r.subTitle3 ?? '',
             body: r.body ?? '',
             imagesLeft: left,
             imagesRight: right,

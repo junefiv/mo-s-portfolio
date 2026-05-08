@@ -6,6 +6,7 @@ const workProjectsQuery = `*[_type == "workProject"] | order(projectNo desc) {
   title,
   "subTitle1": coalesce(subTitle1, subTitle),
   "subTitle2": coalesce(subTitle2, ""),
+  "subTitle3": coalesce(subTitle3, ""),
   body,
   "imagesLeft": imagesLeft[]{ "url": asset->url },
   "imagesRight": imagesRight[]{ "url": asset->url }
@@ -17,6 +18,7 @@ export type SanityWorkProject = {
   title: string | null
   subTitle1: string | null
   subTitle2: string | null
+  subTitle3: string | null
   body: string | null
   imagesLeft: Array<{url: string | null} | null> | null
   imagesRight: Array<{url: string | null} | null> | null

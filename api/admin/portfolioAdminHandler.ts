@@ -511,6 +511,7 @@ export class PortfolioAdminApi {
                   title: string | null
                   subTitle1: string | null
                   subTitle2: string | null
+                  subTitle3: string | null
                   body: string | null
                   imagesLeft: Array<{url: string | null} | null> | null
                   imagesRight: Array<{url: string | null} | null> | null
@@ -521,6 +522,7 @@ export class PortfolioAdminApi {
                 _id, projectNo, title,
                 "subTitle1": coalesce(subTitle1, subTitle),
                 "subTitle2": coalesce(subTitle2, ""),
+                "subTitle3": coalesce(subTitle3, ""),
                 body,
                 "imagesLeft": imagesLeft[]{ "url": asset->url },
                 "imagesRight": imagesRight[]{ "url": asset->url }
@@ -710,6 +712,7 @@ export class PortfolioAdminApi {
           const title = firstField(body, 'title')
           const subTitle1 = firstField(body, 'sub_title_1')
           const subTitle2 = firstField(body, 'sub_title_2')
+          const subTitle3 = firstField(body, 'sub_title_3')
           const textBody = firstField(body, 'body')
           const fileMap = rq.files as {[fieldname: string]: UploadedFile[]} | undefined
           const left = fileMap?.imagesLeft
@@ -736,6 +739,7 @@ export class PortfolioAdminApi {
             slug: {_type: 'slug', current: slug},
             subTitle1: subTitle1 || undefined,
             subTitle2: subTitle2 || undefined,
+            subTitle3: subTitle3 || undefined,
             body: textBody,
             imagesLeft,
             imagesRight,
@@ -761,6 +765,7 @@ export class PortfolioAdminApi {
           const title = firstField(body, 'title')
           const subTitle1 = firstField(body, 'sub_title_1')
           const subTitle2 = firstField(body, 'sub_title_2')
+          const subTitle3 = firstField(body, 'sub_title_3')
           const textBody = firstField(body, 'body')
           if (!title || !textBody) {
             json(res, 400, {ok: false, error: 'title and body are required.'})
@@ -794,6 +799,7 @@ export class PortfolioAdminApi {
             slug: {_type: 'slug', current: makeSlug(title)},
             subTitle1: subTitle1 || '',
             subTitle2: subTitle2 || '',
+            subTitle3: subTitle3 || '',
           }
 
           if (patchImages) {

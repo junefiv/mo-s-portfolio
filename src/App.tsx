@@ -1,5 +1,5 @@
-import { useLayoutEffect } from 'react'
-import { Navigate, Route, Routes } from 'react-router'
+import { useEffect, useLayoutEffect } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router'
 import Navigation from './components/Navigation'
 import News from './pages/News'
 import AdminPage from './pages/admin/AdminPage'
@@ -8,12 +8,41 @@ import Work from './pages/Work'
 import { SITE_TITLE } from './siteMeta'
 
 export default function App() {
+  const location = useLocation()
+  const isAdmin =
+    location.pathname === '/admin' ||
+    location.pathname.startsWith('/admin/')
+
   useLayoutEffect(() => {
     document.title = SITE_TITLE
   }, [])
 
+  useEffect(() => {
+    if (isAdmin) return
+
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+    }
+    const onDragStart = (e: DragEvent) => {
+      if (e.target instanceof HTMLImageElement) {
+        e.preventDefault()
+      }
+    }
+
+    document.addEventListener('contextmenu', onContextMenu, true)
+    document.addEventListener('dragstart', onDragStart, true)
+    return () => {
+      document.removeEventListener('contextmenu', onContextMenu, true)
+      document.removeEventListener('dragstart', onDragStart, true)
+    }
+  }, [isAdmin])
+
   return (
-    <div className="mx-auto min-h-screen w-full min-w-0 max-w-page">
+    <div
+      className={`mx-auto min-h-screen w-full min-w-0 max-w-page ${
+        isAdmin ? '' : 'site-content-guard'
+      }`}
+    >
       <Navigation />
       <div className="min-w-0">
         <Routes>

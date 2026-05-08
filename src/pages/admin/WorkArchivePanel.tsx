@@ -42,6 +42,7 @@ type WorkDoc = {
   title: string | null
   subTitle1: string | null
   subTitle2: string | null
+  subTitle3: string | null
   body: string | null
   imagesLeft: Array<{url: string | null} | null> | null
   imagesRight: Array<{url: string | null} | null> | null
@@ -216,12 +217,14 @@ function WorkEditForm({
     const title = (form.elements.namedItem('title') as HTMLInputElement | null)?.value ?? ''
     const subTitle1 = (form.elements.namedItem('sub_title_1') as HTMLInputElement | null)?.value ?? ''
     const subTitle2 = (form.elements.namedItem('sub_title_2') as HTMLInputElement | null)?.value ?? ''
+    const subTitle3 = (form.elements.namedItem('sub_title_3') as HTMLInputElement | null)?.value ?? ''
     const body = (form.elements.namedItem('body') as HTMLTextAreaElement | null)?.value ?? ''
     const fd = new FormData()
     fd.append('_id', doc._id)
     fd.append('title', title)
     fd.append('sub_title_1', subTitle1)
     fd.append('sub_title_2', subTitle2)
+    fd.append('sub_title_3', subTitle3)
     fd.append('body', body)
     fd.append('remove_left_indexes', [...rmLeft].sort((a, b) => a - b).join(','))
     fd.append('remove_right_indexes', [...rmRight].sort((a, b) => a - b).join(','))
@@ -300,6 +303,14 @@ function WorkEditForm({
           id={`${formId}-sub2`}
           name="sub_title_2"
           defaultValue={doc.subTitle2 ?? ''}
+          className={fieldClass}
+        />
+      </Field>
+      <Field label="Subtitle 3" htmlFor={`${formId}-sub3`}>
+        <input
+          id={`${formId}-sub3`}
+          name="sub_title_3"
+          defaultValue={doc.subTitle3 ?? ''}
           className={fieldClass}
         />
       </Field>

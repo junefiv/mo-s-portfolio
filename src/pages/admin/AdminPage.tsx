@@ -376,6 +376,9 @@ function WorkForm() {
       <Field label="Subtitle 2" htmlFor={`${id}-sub2`}>
         <input id={`${id}-sub2`} name="sub_title_2" className={fieldClass} />
       </Field>
+      <Field label="Subtitle 3" htmlFor={`${id}-sub3`}>
+        <input id={`${id}-sub3`} name="sub_title_3" className={fieldClass} />
+      </Field>
       <Field label="Body" htmlFor={`${id}-body`}>
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>

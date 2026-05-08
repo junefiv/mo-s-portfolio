@@ -252,6 +252,19 @@
   }
 
   /**
+   * 공개 페이지(App에서 class 부여): 우클릭·이미지 드래그 저장 완화.
+   * OS·브라우저 스크린샷·스니핑 도구까지 막는 것은 표준 웹으로 불가.
+   */
+  .site-content-guard {
+    -webkit-touch-callout: none;
+  }
+
+  .site-content-guard img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  /**
    * Default typography styles for HTML elements (h1-h4, p, label, button, input).
    * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
    */
