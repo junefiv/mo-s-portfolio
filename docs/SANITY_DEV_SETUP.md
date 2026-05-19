@@ -98,7 +98,7 @@ npm run dev
 [sanity.io/manage](https://www.sanity.io/manage) → 프로젝트 → **API** → **CORS origins**에 예:
 
 - `http://localhost:5173` (Vite 로컬)
-- 배포 도메인 (예: GitHub Pages URL)
+- `https://studiodecho.com` (및 로컬과 동일하게 `http://localhost:5173`)
 
 ---
 

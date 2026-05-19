@@ -1,5 +1,5 @@
-# Vite `dist`만 Pages에 올립니다. 루트 index.html(/src/main.tsx) → 흰 화면.
-# Settings → Pages → Source: "GitHub Actions" (Branch / (root) 아님)
+# Vite `dist`만 Pages에 올립니다. 배포 URL: https://studiodecho.com/
+# Settings → Pages → Source: "GitHub Actions", Custom domain: studiodecho.com
 # 액션은 Node 24 런타임(@v5+ / @v6) 사용 — Node 20 경고 방지
 
 name: Deploy to GitHub Pages
@@ -40,7 +40,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
           VITE_ADMIN_API_ORIGIN: ${{ secrets.VITE_ADMIN_API_ORIGIN }}
 
       - name: Setup Pages

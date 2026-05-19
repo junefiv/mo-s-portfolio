@@ -8,20 +8,14 @@ import { adminApiPlugin } from './vite/adminApiPlugin'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-/**
- * GitHub Project Pages URL: `https://<user>.github.io/<저장소이름>/`
- * `vite build`는 기본이 `/`이면 배포 루트와 맞지 않아 JS를 못 불러 흰 화면만 납니다.
- * 저장소 이름이 다르면 `GITHUB_PAGES_REPO`만 맞추면 됩니다.
- */
-const GITHUB_PAGES_REPO = 'mo-s-portfolio'
+/** 배포: https://studiodecho.com/ (GitHub Pages 커스텀 도메인, site root `/`) */
+const SITE_BASE = '/'
 
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production'
-  const slug = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? GITHUB_PAGES_REPO
-  const base = isProd ? `/${slug}/` : '/'
 
   return {
-    base,
+    base: SITE_BASE,
     resolve: {
       alias: {
         '@': join(__dirname, 'src'),
@@ -34,7 +28,7 @@ export default defineConfig(({ mode }) => {
       {
         name: 'gh-pages-404',
         closeBundle() {
-          if (base === '/') return
+          if (!isProd) return
           const dist = join(__dirname, 'dist')
           const indexHtml = join(dist, 'index.html')
           if (existsSync(indexHtml)) {
