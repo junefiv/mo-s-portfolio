@@ -8,8 +8,10 @@ import {
   setStoredAdminSecret,
 } from '@/lib/adminApi'
 import {formDataWithResizedImages} from '@/lib/adminImageResize'
+import {AdminFileInput} from './AdminFileInput'
 import AdminToastListener from './AdminToastListener'
 import FabricationArchivePanel from './FabricationArchivePanel'
+import {GermanDateInput} from './GermanDateInput'
 import NewsArchivePanel from './NewsArchivePanel'
 import WorkArchivePanel from './WorkArchivePanel'
 
@@ -294,27 +296,24 @@ function NewsForm() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl space-y-5">
       <p className="text-sm text-muted-foreground">
-        기존 글·이미지 순서 수정은 상단 탭에서 News → Archive · Edit로 이동하세요.
+      To modify the order of the existing text and image, go to News → Archive · Edit on the top tab.
       </p>
       <Field label="Title" htmlFor={`${id}-title`}>
         <input id={`${id}-title`} name="title" required className={fieldClass} />
       </Field>
       <Field label="Date" htmlFor={`${id}-date`}>
-        <input id={`${id}-date`} name="date" type="date" required className={fieldClass} />
+        <GermanDateInput id={`${id}-date`} name="date" required className={fieldClass} />
       </Field>
       <Field label="Body" htmlFor={`${id}-body`}>
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>
       <Field label="Images (multiple)" htmlFor={`${id}-img`}>
-        <input
+        <AdminFileInput
           key={fileKey}
           id={`${id}-img`}
           name="images"
-          type="file"
-          accept="image/*"
           multiple
           required
-          className={`${fieldClass} py-2 file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium`}
         />
       </Field>
       <button
@@ -383,27 +382,21 @@ function WorkForm() {
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>
       <Field label="Drawing images — left column (multiple)" htmlFor={`${id}-left`}>
-        <input
+        <AdminFileInput
           key={`${fileKey}-L`}
           id={`${id}-left`}
           name="imagesLeft"
-          type="file"
-          accept="image/*"
           multiple
           required
-          className={`${fieldClass} py-2 file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium`}
         />
       </Field>
       <Field label="Artwork images — right column (multiple)" htmlFor={`${id}-right`}>
-        <input
+        <AdminFileInput
           key={`${fileKey}-R`}
           id={`${id}-right`}
           name="imagesRight"
-          type="file"
-          accept="image/*"
           multiple
           required
-          className={`${fieldClass} py-2 file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium`}
         />
       </Field>
       <button
@@ -472,15 +465,12 @@ function FabricationForm() {
         <textarea id={`${id}-body`} name="body" required rows={8} className={fieldClass} />
       </Field>
       <Field label="Images (multiple)" htmlFor={`${id}-img`}>
-        <input
+        <AdminFileInput
           key={fileKey}
           id={`${id}-img`}
           name="images"
-          type="file"
-          accept="image/*"
           multiple
           required
-          className={`${fieldClass} py-2 file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium`}
         />
       </Field>
       <button

@@ -35,6 +35,7 @@ export function AddImageButton({
         type="file"
         accept="image/*"
         multiple
+        lang="en"
         className="absolute inset-0 z-0 h-full w-full min-h-0 min-w-0 cursor-pointer opacity-0"
         aria-label={label}
         onChange={(e) => {

@@ -16,6 +16,7 @@ import {
   slotsFromUrlList,
   type AdminImgSlotRow,
 } from './AdminSortableImageSlots'
+import {GermanDateInput} from './GermanDateInput'
 
 type Row = {_id: string; title: string | null; publishedAt: string | null}
 
@@ -222,12 +223,11 @@ function NewsEditForm({
         <input id={`${formId}-title`} name="title" required defaultValue={doc.title ?? ''} className={fieldClass} />
       </Field>
       <Field label="Date" htmlFor={`${formId}-date`}>
-        <input
+        <GermanDateInput
           id={`${formId}-date`}
           name="date"
-          type="date"
           required
-          defaultValue={dateInputValue(doc.publishedAt)}
+          defaultIso={dateInputValue(doc.publishedAt)}
           className={fieldClass}
         />
       </Field>
@@ -242,7 +242,7 @@ function NewsEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        Images: ⋮⋮로 순서 변경. ×는 삭제 예약, +로 추가. 주황 테두리는 저장 전 업로드 대기. Save 후 Sanity 반영.
+      ⋮⋮←You can change the order with the handle. The × button is scheduled to be deleted. You can add an image with the + button, and the orange border is waiting for upload before saving.
       </p>
       <div className="min-w-0 space-y-2">
         <p className="text-xs font-medium text-foreground">Images</p>

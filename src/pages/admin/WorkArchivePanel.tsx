@@ -325,7 +325,7 @@ function WorkEditForm({
         />
       </Field>
       <p className="text-xs text-muted-foreground">
-        Images: ⋮⋮로 드래그해 순서를 바꿀 수 있습니다. ×는 삭제 예약(저장 시 반영), +로 새 파일을 끼워 넣을 수 있습니다. 주황 테두리는 저장 전 업로드 대기입니다. Save 후 Sanity에 반영됩니다.
+      ⋮⋮←You can change the order with the handle. The × button is scheduled to be deleted. You can add an image with the + button, and the orange border is waiting for upload before saving.
       </p>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="min-w-0 space-y-2">
