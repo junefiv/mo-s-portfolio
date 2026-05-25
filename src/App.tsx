@@ -5,7 +5,7 @@ import News from './pages/News'
 import AdminPage from './pages/admin/AdminPage'
 import Info from './pages/Info'
 import Work from './pages/Work'
-import { SITE_TITLE } from './siteMeta'
+import {applySiteDocumentMeta} from '@/lib/siteDocumentMeta'
 
 export default function App() {
   const location = useLocation()
@@ -14,8 +14,8 @@ export default function App() {
     location.pathname.startsWith('/admin/')
 
   useLayoutEffect(() => {
-    document.title = SITE_TITLE
-  }, [])
+    applySiteDocumentMeta(location.pathname)
+  }, [location.pathname])
 
   useEffect(() => {
     if (isAdmin) return

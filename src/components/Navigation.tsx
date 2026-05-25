@@ -185,11 +185,11 @@ export default function Navigation() {
     <nav
       ref={navRootRef}
       className="fixed top-0 left-0 right-0 z-50"
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}
     >
       <div
         ref={navShellRef}
-        className={`mx-auto w-full min-w-0 max-w-page border-b px-6 py-3 transition-all duration-1000 ease-in-out ${
+        className={`mx-auto w-full min-w-0 max-w-page border-b pt-[35px] pr-6 pb-3 pl-6 transition-all duration-1000 ease-in-out ${
           isScrolling
             ? 'border-transparent bg-transparent'
             : 'border-black/20 bg-white/80 backdrop-blur-md'
@@ -203,7 +203,9 @@ export default function Navigation() {
           <div className="mb-3">
             <Link
               to="/"
-              className="font-site-logo inline-block text-5xl font-bold tracking-[0em] text-foreground transition-opacity hover:opacity-70"
+              title="Studio DeCho — studiodecho.com"
+              aria-label="Studio DeCho, studiodecho"
+              className="font-site-logo inline-block text-4xl font-bold tracking-[0em] text-foreground transition-opacity hover:opacity-70"
             >
               {SITE_TITLE}
             </Link>

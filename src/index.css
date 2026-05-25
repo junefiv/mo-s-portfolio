@@ -207,7 +207,7 @@
    * JS가 `document.documentElement`에 `--nav-height`를 px로 넣으면 그 값이 우선됩니다.
    */
   :root {
-    --nav-chrome-est: 11.5rem;
+    --nav-chrome-est: 13rem;
     --nav-height-fallback-est: calc(
       env(safe-area-inset-top, 0px) + var(--nav-chrome-est)
     );
@@ -215,31 +215,31 @@
 
   @media (min-width: 30rem) {
     :root {
-      --nav-chrome-est: 11.125rem;
+      --nav-chrome-est: 12.625rem;
     }
   }
 
   @media (min-width: 40rem) {
     :root {
-      --nav-chrome-est: 10.75rem;
+      --nav-chrome-est: 12.25rem;
     }
   }
 
   @media (min-width: 48rem) {
     :root {
-      --nav-chrome-est: 10.25rem;
+      --nav-chrome-est: 11.75rem;
     }
   }
 
   @media (min-width: 64rem) {
     :root {
-      --nav-chrome-est: 9.75rem;
+      --nav-chrome-est: 11.25rem;
     }
   }
 
   @media (min-width: 80rem) {
     :root {
-      --nav-chrome-est: 9.5rem;
+      --nav-chrome-est: 11rem;
     }
   }
 
