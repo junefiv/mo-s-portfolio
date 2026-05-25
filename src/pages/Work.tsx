@@ -2,23 +2,10 @@ import {useCallback, useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
 import WorkImageCarousel from '../components/WorkImageCarousel'
 import {fetchWorkProjects} from '@/lib/workFromSanity'
+import {useMdUp} from '@/lib/useMdUp'
 
-/** `@theme` md와 동일: 라이트박스는 md 이상에서만 */
-const MD_MIN_WIDTH = '(min-width: 48rem)'
 /** `@theme` lg와 동일: 우측 고정 레일은 lg 이상, 그 아래는 드로어 */
 const LG_MIN_WIDTH = '(min-width: 64rem)'
-
-function useMdUp() {
-  const [mdUp, setMdUp] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia(MD_MIN_WIDTH)
-    const on = () => setMdUp(mq.matches)
-    on()
-    mq.addEventListener('change', on)
-    return () => mq.removeEventListener('change', on)
-  }, [])
-  return mdUp
-}
 
 function useLgUp() {
   const [lgUp, setLgUp] = useState(false)
@@ -40,7 +27,7 @@ const RAIL_TEXT_STROKE =
   '[-webkit-text-stroke:0.45px_#fff] [paint-order:stroke_fill]'
 
 function railButtonClassName(isActive: boolean) {
-  const base = `w-full min-w-0 text-right break-words font-semibold transition-all duration-500 ease-in-out text-neutral-950 ${RAIL_TEXT_STROKE}`
+  const base = `w-auto max-w-full shrink-0 text-right font-semibold transition-all duration-500 ease-in-out text-neutral-950 ${RAIL_TEXT_STROKE}`
   return isActive
     ? `${base} shrink-0 text-sm md:text-base`
     : `${base} shrink-0 text-xs text-neutral-950/40 hover:text-neutral-950/85`
@@ -348,7 +335,7 @@ export default function Work() {
           setRailPointerActive(true)
           scheduleRailHide()
         }}
-        className={`fixed right-4 top-1/2 z-[200] w-auto max-w-[min(12rem,45vw)] -translate-y-1/2 transition-opacity duration-700 ease-in-out md:right-6 md:max-w-xs ${
+        className={`fixed right-4 top-1/2 z-[200] w-max max-w-[calc(100vw-2rem)] -translate-y-1/2 transition-opacity duration-700 ease-in-out md:right-6 ${
           railVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
@@ -379,7 +366,7 @@ export default function Work() {
           aria-modal="true"
           aria-label="WORK 작품 목록"
           aria-hidden={!workDrawerOpen}
-          className={`fixed inset-y-0 right-0 z-[200] flex w-[min(20rem,calc(100vw-2rem))] max-w-[88vw] flex-col border-l border-border/50 bg-background/95 pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] shadow-2xl backdrop-blur-md transition-transform duration-300 ease-out ${
+          className={`fixed inset-y-0 right-0 z-[200] flex w-max max-w-[calc(100vw-2rem)] shrink-0 flex-col border-l border-border/50 bg-background/95 pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] pl-2 shadow-2xl backdrop-blur-md transition-transform duration-300 ease-out ${
             workDrawerOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
           }`}
         >
@@ -435,7 +422,7 @@ export default function Work() {
           </div>
           <nav
             aria-label="WORK project list"
-            className="flex min-h-0 flex-1 touch-pan-y flex-col items-end gap-1 overflow-y-auto overscroll-y-contain px-3 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
+            className="flex min-h-0 flex-1 touch-pan-y flex-col items-end gap-1 overflow-y-auto overscroll-y-contain py-3 pl-2 pr-[max(10px,env(safe-area-inset-right,0px))] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:gap-2"
           >
             {renderProjectNavButtons(() => setWorkDrawerOpen(false))}
           </nav>

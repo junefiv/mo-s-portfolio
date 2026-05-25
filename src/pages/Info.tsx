@@ -38,7 +38,16 @@ const MO_BIO =
 const profileImageClass =
   'pointer-events-none h-auto w-full max-w-[11rem] object-contain xs:max-w-[12rem] sm:max-w-[13rem] md:max-w-[14rem]'
 
-const bodyTextClass = 'text-left text-sm leading-relaxed text-foreground/90 xs:text-base'
+const bodyTextClass = 'text-justify text-sm leading-relaxed text-foreground/90 xs:text-base'
+
+/** 프로필 행(이미지 + 본문)과 동일한 최대 너비 — 이미지(md 14rem) + gap(md 3rem) + 본문(max-w-xl) */
+const infoColumnClass =
+  'mx-auto w-full min-w-0 max-w-[min(100%,calc(14rem+3rem+36rem))]'
+
+const introBoxClass = 'w-full min-w-0 space-y-4'
+
+const profileSectionClass =
+  'flex w-full min-w-0 flex-col items-center gap-6 xs:gap-8 sm:flex-row sm:items-center sm:gap-10 md:gap-12'
 
 export default function Info() {
   const navigate = useNavigate()
@@ -65,19 +74,22 @@ export default function Info() {
   return (
     <main className="px-6">
       <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-20">
-        <div className="mx-auto w-full max-w-4xl text-left">
-          <div className="max-w-3xl space-y-4">
-            {BIO_PARAGRAPHS.map((paragraph, index) => (
-              <p key={index} className={bodyTextClass}>
-                {boldNames(paragraph)}
-              </p>
-            ))}
-          </div>
+        <div className="mx-auto w-full max-w-4xl">
+          <div className={`${infoColumnClass} flex flex-col gap-12 xs:gap-12 md:gap-16`}>
+            <section
+              aria-label="Studio introduction"
+              className={introBoxClass}
+            >
+              {BIO_PARAGRAPHS.map((paragraph, index) => (
+                <p key={index} className={bodyTextClass}>
+                  {boldNames(paragraph)}
+                </p>
+              ))}
+            </section>
 
-          <div className="mt-10 flex flex-col items-center gap-12 xs:mt-12 md:mt-14 md:gap-16">
             <section
               aria-labelledby="info-elvin"
-              className="mx-auto flex w-fit max-w-full min-w-0 flex-col items-center gap-6 xs:gap-8 sm:flex-row sm:items-center sm:gap-10 md:gap-12"
+              className={profileSectionClass}
             >
               <figure className="min-w-0 shrink-0">
                 <button
@@ -97,15 +109,12 @@ export default function Info() {
                   />
                 </button>
               </figure>
-              <p id="info-elvin" className={`min-w-0 max-w-xl ${bodyTextClass}`}>
+              <p id="info-elvin" className={`min-w-0 flex-1 sm:max-w-xl ${bodyTextClass}`}>
                 {boldNames(ELVIN_BIO)}
               </p>
             </section>
 
-            <section
-              aria-labelledby="info-mo"
-              className="mx-auto flex w-fit max-w-full min-w-0 flex-col items-center gap-6 xs:gap-8 sm:flex-row sm:items-center sm:gap-10 md:gap-12"
-            >
+            <section aria-labelledby="info-mo" className={profileSectionClass}>
               <figure className="min-w-0 shrink-0">
                 <button
                   type="button"
@@ -124,14 +133,16 @@ export default function Info() {
                   />
                 </button>
               </figure>
-              <p id="info-mo" className={`min-w-0 max-w-xl ${bodyTextClass}`}>
+              <p id="info-mo" className={`min-w-0 flex-1 sm:max-w-xl ${bodyTextClass}`}>
                 {boldNames(MO_BIO)}
               </p>
             </section>
           </div>
 
-          <footer className="mt-16 w-full border-t border-border pt-8 xs:mt-20 md:mt-24 md:pt-10">
-            <p className="max-w-xl text-left text-sm leading-relaxed text-muted-foreground/80">
+          <footer
+            className={`${infoColumnClass} mt-16 border-t border-border pt-8 xs:mt-20 md:mt-24 md:pt-10`}
+          >
+            <p className="text-justify text-sm leading-relaxed text-muted-foreground/80">
               by git_in means: 옷<strong className="font-bold text-muted-foreground">깃</strong>만 스쳐도{' '}
               <strong className="font-bold text-muted-foreground">인</strong>연 by{' '}
               <button

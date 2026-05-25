@@ -211,14 +211,14 @@ export default function WorkImageCarousel({
     )
     return (
       <div
-        className="relative min-h-0 w-full min-w-0 [touch-action:manipulation] select-none"
+        className="relative min-h-0 w-full min-w-0 select-none max-lg:[touch-action:pan-y] lg:[touch-action:manipulation]"
         aria-label={label}
       >
         {lightboxEnabled ? (
           <button
             type="button"
             onClick={() => setLightboxOpen(true)}
-            className="block w-full cursor-zoom-in border-0 bg-transparent p-0 text-left [touch-action:manipulation] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2"
+            className="block w-full cursor-zoom-in border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2 max-lg:[touch-action:pan-y] lg:[touch-action:manipulation]"
             aria-label="이미지 크게 보기"
           >
             {frame}
@@ -233,7 +233,7 @@ export default function WorkImageCarousel({
 
   return (
     <div
-      className="group relative min-h-0 w-full min-w-0 [touch-action:manipulation] select-none"
+      className="group relative min-h-0 w-full min-w-0 select-none max-lg:[touch-action:pan-y] lg:[touch-action:manipulation]"
       aria-label={label}
     >
       <div
@@ -241,7 +241,7 @@ export default function WorkImageCarousel({
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="relative aspect-square w-full min-w-0 cursor-grab overflow-hidden rounded-sm bg-[#ffffff] active:cursor-grabbing"
+        className="relative aspect-square w-full min-w-0 cursor-grab touch-pan-y overflow-hidden rounded-sm bg-[#ffffff] active:cursor-grabbing"
       >
         <div
           onTransitionEnd={onTrackTransitionEnd}
@@ -279,7 +279,7 @@ export default function WorkImageCarousel({
           e.stopPropagation()
           goPrev()
         }}
-        className={`absolute left-0 top-0 z-10 flex h-full w-10 sm:w-12 items-center justify-center bg-transparent transition-opacity hover:opacity-80 max-md:pointer-events-auto max-md:opacity-100 md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100 md:group-focus-within:pointer-events-auto md:group-focus-within:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 ${
+        className={`absolute left-0 top-0 z-10 hidden h-full w-10 items-center justify-center bg-transparent transition-opacity hover:opacity-80 lg:flex lg:w-12 lg:pointer-events-none lg:opacity-0 lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100 lg:focus-visible:pointer-events-auto lg:focus-visible:opacity-100 ${
           navIconBlack
             ? 'text-black'
             : 'text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.45))]'
@@ -308,7 +308,7 @@ export default function WorkImageCarousel({
           e.stopPropagation()
           goNext()
         }}
-        className={`absolute right-0 top-0 z-10 flex h-full w-10 sm:w-12 items-center justify-center bg-transparent transition-opacity hover:opacity-80 max-md:pointer-events-auto max-md:opacity-100 md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100 md:group-focus-within:pointer-events-auto md:group-focus-within:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 ${
+        className={`absolute right-0 top-0 z-10 hidden h-full w-10 items-center justify-center bg-transparent transition-opacity hover:opacity-80 lg:flex lg:w-12 lg:pointer-events-none lg:opacity-0 lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100 lg:focus-visible:pointer-events-auto lg:focus-visible:opacity-100 ${
           navIconBlack
             ? 'text-black'
             : 'text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.45))]'

@@ -203,7 +203,7 @@ export default function Navigation() {
           <div className="mb-3">
             <Link
               to="/"
-              className="font-site-logo inline-block text-8xl font-bold tracking-[0em] text-foreground transition-opacity hover:opacity-70"
+              className="font-site-logo inline-block text-5xl font-bold tracking-[0em] text-foreground transition-opacity hover:opacity-70"
             >
               {SITE_TITLE}
             </Link>

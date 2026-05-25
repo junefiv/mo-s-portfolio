@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react'
-import {ImageLightbox} from '@/components/ImageLightbox'
+import WorkImageCarousel from '@/components/WorkImageCarousel'
 import {fetchNewsPosts, type SanityNewsPost} from '@/lib/newsFromSanity'
+import {useMdUp} from '@/lib/useMdUp'
 
 type NewsItem = {
   id: string
@@ -38,18 +39,42 @@ function formatNewsDate(iso: string) {
   })
 }
 
-type NewsLightbox = {
-  images: string[]
-  startIndex: number
-  label: string
-} | null
+function NewsItemImages({item}: {item: NewsItem}) {
+  const mdUp = useMdUp()
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    setIndex(0)
+  }, [item.id])
+
+  if (item.images.length === 0) {
+    return (
+      <div
+        className="flex aspect-square w-full min-w-0 items-center justify-center rounded-sm bg-muted text-xs text-muted-foreground"
+        aria-hidden
+      >
+        No image
+      </div>
+    )
+  }
+
+  return (
+    <div className="aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-muted">
+      <WorkImageCarousel
+        images={item.images}
+        label={item.title}
+        index={index}
+        onIndexChange={setIndex}
+        lightboxEnabled={mdUp}
+      />
+    </div>
+  )
+}
 
 export default function News() {
   const [items, setItems] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lightbox, setLightbox] = useState<NewsLightbox>(null)
-
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -94,37 +119,7 @@ export default function News() {
             {items.map((item) => (
               <li key={item.id} className="min-w-0">
                 <article className="flex min-w-0 flex-col gap-1.5">
-                  <div className="aspect-square w-full min-w-0 overflow-hidden rounded-sm bg-muted">
-                    {item.image ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setLightbox({
-                            images: item.images.length > 0 ? item.images : item.image ? [item.image] : [],
-                            startIndex: 0,
-                            label: item.title,
-                          })
-                        }
-                        className="h-full w-full cursor-zoom-in border-0 bg-transparent p-0 [touch-action:manipulation] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 focus-visible:ring-offset-2"
-                        aria-label="이미지 크게 보기"
-                      >
-                        <img
-                          src={item.image}
-                          alt=""
-                          className="pointer-events-none h-full w-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </button>
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center text-xs text-muted-foreground"
-                        aria-hidden
-                      >
-                        No image
-                      </div>
-                    )}
-                  </div>
+                  <NewsItemImages item={item} />
                   <h2 className="text-xl font-medium leading-snug tracking-tight text-foreground">
                     {item.title}
                   </h2>
@@ -138,13 +133,6 @@ export default function News() {
           </ul>
         )}
 
-        <ImageLightbox
-          open={lightbox !== null}
-          onClose={() => setLightbox(null)}
-          images={lightbox?.images ?? []}
-          startIndex={lightbox?.startIndex ?? 0}
-          aria-label={lightbox?.label ?? 'News image'}
-        />
       </div>
     </main>
   )
