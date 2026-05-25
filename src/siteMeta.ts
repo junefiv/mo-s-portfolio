@@ -7,6 +7,9 @@ export const SITE_URL = 'https://studiodecho.com'
 /** `public/og.png` — SNS 미리보기용 (소스: `src/assets/logo.png`) */
 export const SITE_OG_IMAGE = `${SITE_URL}/og.png`
 
+/** `public/favicon.png` — 탭·검색 결과 파비콘 (소스: `src/assets/logo.png`) */
+export const SITE_FAVICON = `${SITE_URL}/favicon.png`
+
 /** studiodecho.com·붙여 쓴 브랜드 검색 신호 (메타·스키마·본문과 맞출 것) */
 export const SITE_BRAND_COMPACT = 'studiodecho'
 
@@ -54,8 +57,7 @@ export function metaForPath(pathname: string): RouteMeta {
   const routes: Record<string, RouteMeta> = {
     '/': {
       title: `Work · ${SITE_TITLE}`,
-      description:
-        'Selected work by Studio DeCho (studiodecho) — drawings and artworks across urban and cultural contexts.',
+      description: SITE_DESCRIPTION,
     },
     '/news': {
       title: `News · ${SITE_TITLE}`,

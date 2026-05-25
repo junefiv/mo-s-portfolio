@@ -2,6 +2,7 @@ import {buildSiteJsonLd} from '@/lib/siteJsonLd'
 import {
   SITE_BRAND_COMPACT,
   SITE_DESCRIPTION,
+  SITE_FAVICON,
   SITE_KEYWORDS,
   SITE_LOCALE,
   SITE_OG_IMAGE,
@@ -50,7 +51,7 @@ function upsertJsonLd() {
   el.textContent = JSON.stringify(buildSiteJsonLd())
 }
 
-function upsertLink(rel: string, href: string) {
+function upsertLink(rel: string, href: string, type?: string) {
   const selector = `link[rel="${CSS.escape(rel)}"]`
   let el = document.head.querySelector<HTMLLinkElement>(selector)
   if (!el) {
@@ -59,6 +60,13 @@ function upsertLink(rel: string, href: string) {
     document.head.appendChild(el)
   }
   el.href = href
+  if (type) el.type = type
+  else el.removeAttribute('type')
+}
+
+function upsertFavicon() {
+  upsertLink('icon', SITE_FAVICON, 'image/png')
+  upsertLink('apple-touch-icon', SITE_FAVICON)
 }
 
 /** SPA 라우트 변경 시 `<head>` 메타 동기화 */
@@ -84,6 +92,7 @@ export function applySiteDocumentMeta(pathname: string) {
   }
 
   upsertLink('canonical', canonical)
+  upsertFavicon()
 
   upsertMeta('property', 'og:type', 'website')
   upsertMeta('property', 'og:site_name', SITE_TITLE)

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node -e \"const fs=require('fs');const s='src/assets/logo.png';fs.copyFileSync(s,'public/favicon.png');fs.copyFileSync(s,'public/og.png');\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
