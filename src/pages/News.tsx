@@ -1,5 +1,7 @@
 import {useEffect, useState} from 'react'
+import SiteSearchIntro from '@/components/SiteSearchIntro'
 import WorkImageCarousel from '@/components/WorkImageCarousel'
+import {publicLoadErrorMessage} from '@/lib/publicLoadError'
 import {fetchNewsPosts, type SanityNewsPost} from '@/lib/newsFromSanity'
 import {useMdUp} from '@/lib/useMdUp'
 
@@ -84,12 +86,7 @@ export default function News() {
         const rows = await fetchNewsPosts()
         if (!cancelled) setItems(mapSanityToItems(rows))
       } catch (e) {
-        if (!cancelled) {
-          const msg = e instanceof Error ? e.message : String(e)
-          setError(
-            `${msg} — If you are fetching from the browser, check sanity.io/manage → API → CORS origins and make sure this site's origin (e.g. http://localhost:5173) is added.`,
-          )
-        }
+        if (!cancelled) setError(publicLoadErrorMessage(e))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -102,12 +99,18 @@ export default function News() {
   return (
     <main className="min-w-0 px-6">
       <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-25">
-       
+        <SiteSearchIntro />
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground" data-nosnippet>
+            Loading…
+          </p>
         ) : error ? (
-          <p className="max-w-prose text-sm leading-relaxed text-destructive" role="alert">
+          <p
+            className="max-w-prose text-sm leading-relaxed text-destructive"
+            role="alert"
+            data-nosnippet
+          >
             {error}
           </p>
         ) : items.length === 0 ? (

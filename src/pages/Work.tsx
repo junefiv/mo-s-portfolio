@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
+import SiteSearchIntro from '@/components/SiteSearchIntro'
 import WorkImageCarousel from '../components/WorkImageCarousel'
+import {publicLoadErrorMessage} from '@/lib/publicLoadError'
 import {fetchWorkProjects} from '@/lib/workFromSanity'
 import {useMdUp} from '@/lib/useMdUp'
 
@@ -208,7 +210,7 @@ export default function Work() {
       setProjects(mapped)
       setLoadErr(null)
     } catch (e) {
-      setLoadErr(e instanceof Error ? e.message : String(e))
+      setLoadErr(publicLoadErrorMessage(e))
     } finally {
       setLoadDone(true)
     }
@@ -449,7 +451,8 @@ export default function Work() {
   if (loadErr) {
     return (
       <div className="px-6 pt-page-below-nav">
-        <p className="mx-auto max-w-page text-sm text-destructive" role="alert">
+        <SiteSearchIntro />
+        <p className="mx-auto max-w-page text-sm text-destructive" role="alert" data-nosnippet>
           {loadErr}
         </p>
       </div>
@@ -459,6 +462,7 @@ export default function Work() {
   if (loadDone && projects.length === 0) {
     return (
       <div className="px-6 pt-page-below-nav">
+        <SiteSearchIntro />
         <p className="mx-auto max-w-page text-sm text-muted-foreground">
           No WORK projects are available. Add one in `/admin` or Sanity Studio.
         </p>
@@ -469,13 +473,17 @@ export default function Work() {
   if (!loadDone) {
     return (
       <div className="px-6 pt-page-below-nav">
-        <p className="mx-auto max-w-page text-sm text-muted-foreground">Loading…</p>
+        <SiteSearchIntro />
+        <p className="mx-auto max-w-page text-sm text-muted-foreground" data-nosnippet>
+          Loading…
+        </p>
       </div>
     )
   }
 
   return (
     <>
+      <SiteSearchIntro />
       <div className="px-6">
         <div className="mx-auto w-full min-w-0 max-w-page pt-page-below-nav pb-25">
           <div className="grid grid-cols-1 gap-12">
