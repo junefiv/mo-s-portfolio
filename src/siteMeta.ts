@@ -7,8 +7,11 @@ export const SITE_URL = 'https://studiodecho.com'
 /** `public/og.png` — SNS 미리보기용 (소스: `src/assets/logo.png`) */
 export const SITE_OG_IMAGE = `${SITE_URL}/og.png`
 
-/** `public/favicon.png` — 탭·검색 결과 파비콘 (소스: `src/assets/logo.png`) */
-export const SITE_FAVICON = `${SITE_URL}/favicon.png`
+/** `public/favicon.ico` — 검색·브라우저 기본 파비콘 (소스: `src/assets/logo.png`) */
+export const SITE_FAVICON = `${SITE_URL}/favicon.ico`
+
+/** `public/favicon.png` — 192×192 PNG 파비콘 */
+export const SITE_FAVICON_PNG = `${SITE_URL}/favicon.png`
 
 /** studiodecho.com·붙여 쓴 브랜드 검색 신호 (메타·스키마·본문과 맞출 것) */
 export const SITE_BRAND_COMPACT = 'studiodecho'

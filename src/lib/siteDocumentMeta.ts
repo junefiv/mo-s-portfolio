@@ -3,10 +3,12 @@ import {
   SITE_BRAND_COMPACT,
   SITE_DESCRIPTION,
   SITE_FAVICON,
+  SITE_FAVICON_PNG,
   SITE_KEYWORDS,
   SITE_LOCALE,
   SITE_OG_IMAGE,
   SITE_TITLE,
+  SITE_URL,
   canonicalUrlForPath,
   documentTitleForRoute,
   metaForPath,
@@ -64,9 +66,35 @@ function upsertLink(rel: string, href: string, type?: string) {
   else el.removeAttribute('type')
 }
 
+function upsertIcon(
+  key: string,
+  href: string,
+  options: {rel?: string; type?: string; sizes?: string} = {},
+) {
+  const rel = options.rel ?? 'icon'
+  const selector = `link[data-favicon="${CSS.escape(key)}"]`
+  let el = document.head.querySelector<HTMLLinkElement>(selector)
+  if (!el) {
+    el = document.createElement('link')
+    el.dataset.favicon = key
+    document.head.appendChild(el)
+  }
+  el.rel = rel
+  el.href = href
+  if (options.type) el.type = options.type
+  else el.removeAttribute('type')
+  if (options.sizes) el.sizes = options.sizes
+  else el.removeAttribute('sizes')
+}
+
 function upsertFavicon() {
-  upsertLink('icon', SITE_FAVICON, 'image/png')
-  upsertLink('apple-touch-icon', SITE_FAVICON)
+  upsertIcon('ico', SITE_FAVICON, {sizes: '48x48'})
+  upsertIcon('png48', `${SITE_URL}/favicon-48.png`, {type: 'image/png', sizes: '48x48'})
+  upsertIcon('png192', SITE_FAVICON_PNG, {type: 'image/png', sizes: '192x192'})
+  upsertIcon('apple', `${SITE_URL}/apple-touch-icon.png`, {
+    rel: 'apple-touch-icon',
+    sizes: '180x180',
+  })
 }
 
 /** SPA 라우트 변경 시 `<head>` 메타 동기화 */
