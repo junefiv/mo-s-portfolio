@@ -1,6 +1,6 @@
 import {
   SITE_DESCRIPTION,
-  SITE_FAVICON_PNG,
+  SITE_FAVICON,
   SITE_OG_IMAGE,
   SITE_TITLE,
   SITE_URL,
@@ -33,7 +33,7 @@ export function buildSiteJsonLd(): object {
         name: SITE_TITLE,
         alternateName: [...SITE_ALTERNATE_NAMES],
         url: SITE_URL,
-        logo: SITE_FAVICON_PNG,
+        logo: SITE_FAVICON,
         image: SITE_OG_IMAGE,
         description: SITE_DESCRIPTION,
       },

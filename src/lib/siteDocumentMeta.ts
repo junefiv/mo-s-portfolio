@@ -88,8 +88,7 @@ function upsertIcon(
 }
 
 function upsertFavicon() {
-  upsertIcon('ico', SITE_FAVICON, {sizes: '48x48'})
-  upsertIcon('png48', `${SITE_URL}/favicon-48.png`, {type: 'image/png', sizes: '48x48'})
+  upsertIcon('png48', SITE_FAVICON, {type: 'image/png', sizes: '48x48'})
   upsertIcon('png192', SITE_FAVICON_PNG, {type: 'image/png', sizes: '192x192'})
   upsertIcon('apple', `${SITE_URL}/apple-touch-icon.png`, {
     rel: 'apple-touch-icon',

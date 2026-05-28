@@ -25,7 +25,4 @@ await writeSquarePng('favicon.png', 192)
 await writeSquarePng('apple-touch-icon.png', 180)
 await writeSquarePng('og.png', 1200)
 
-/** Google은 /favicon.ico 를 먼저 찾는 경우가 많음 — 48px PNG 바이트를 그대로 사용 */
-fs.copyFileSync(path.join(OUT_DIR, 'favicon-48.png'), path.join(OUT_DIR, 'favicon.ico'))
-
 console.log('Synced brand assets from src/assets/logo.png → public/')
