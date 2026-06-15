@@ -40,11 +40,6 @@ export type RouteMeta = {
   noIndex?: boolean
 }
 
-const defaultMeta: RouteMeta = {
-  title: SITE_TITLE,
-  description: SITE_DESCRIPTION,
-}
-
 /** pathname → 페이지 메타 (`/admin` 등) */
 export function metaForPath(pathname: string): RouteMeta {
   const path = pathname.replace(/\/+$/, '') || '/'
@@ -73,7 +68,13 @@ export function metaForPath(pathname: string): RouteMeta {
     },
   }
 
-  return routes[path] ?? defaultMeta
+  return (
+    routes[path] ?? {
+      title: `Page not found · ${SITE_TITLE}`,
+      description: 'The requested page does not exist on studiodecho.com.',
+      noIndex: true,
+    }
+  )
 }
 
 export function documentTitleForRoute(pathname: string): string {

@@ -4,6 +4,7 @@ import Navigation from './components/Navigation'
 import News from './pages/News'
 import AdminPage from './pages/admin/AdminPage'
 import Info from './pages/Info'
+import NotFound from './pages/NotFound'
 import Work from './pages/Work'
 import {applySiteDocumentMeta} from '@/lib/siteDocumentMeta'
 
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/fabrication" element={<Navigate to="/" replace />} />
           <Route path="/info" element={<Info />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </div>
