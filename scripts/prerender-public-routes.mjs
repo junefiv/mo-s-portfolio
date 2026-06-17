@@ -165,6 +165,28 @@ function writeRoute(filePath, html) {
   writeFileSync(filePath, html, 'utf8')
 }
 
+/** 예전 경로(`/work`, `/fabrication`) — 홈(Work)으로 보냄. 서버 404 대신 200 + canonical */
+function redirectToHomeHtml() {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0;url=/" />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="${SITE_URL}/" />
+    <title>Work · ${escapeHtml(SITE_TITLE)}</title>
+    <script>location.replace('/')</script>
+  </head>
+  <body>
+    <p><a href="/">Studio DeCho — Work</a></p>
+  </body>
+</html>`
+}
+
+function writeRedirectRoute(segment) {
+  writeRoute(join(dist, segment, 'index.html'), redirectToHomeHtml())
+}
+
 const workQuery = `*[_type == "workProject"] | order(projectNo desc) {
   title,
   "subTitle1": coalesce(subTitle1, subTitle),
@@ -214,7 +236,7 @@ writeRoute(
     patchHead(template, {
       title: `News · ${SITE_TITLE}`,
       description: 'News and updates from Studio DeCho at studiodecho.com.',
-      canonical: `${SITE_URL}/news`,
+      canonical: `${SITE_URL}/news/`,
     }),
     newsHtml(newsRows),
   ),
@@ -227,11 +249,14 @@ writeRoute(
       title: `Info · ${SITE_TITLE}`,
       description:
         'About Studio DeCho (studiodecho) — Elvin Demiri and Mo Cho, architects and urban designers in Germany.',
-      canonical: `${SITE_URL}/info`,
+      canonical: `${SITE_URL}/info/`,
     }),
     infoHtml(),
   ),
 )
+
+writeRedirectRoute('work')
+writeRedirectRoute('fabrication')
 
 console.log(
   `Prerendered public routes (work: ${workProjects.length}, news: ${newsRows.length})`,

@@ -86,5 +86,6 @@ export function documentTitleForRoute(pathname: string): string {
 export function canonicalUrlForPath(pathname: string): string {
   const path = pathname.replace(/\/+$/, '') || '/'
   if (path === '/') return `${SITE_URL}/`
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
+  // GitHub Pages 디렉터리 URL(`/news/`)과 맞춤 — 불필요한 301·중복 canonical 방지
+  return `${SITE_URL}${path}/`
 }
