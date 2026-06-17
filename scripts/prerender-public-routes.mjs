@@ -90,8 +90,8 @@ function injectRoot(html, innerHtml) {
 
 function staticNav(activePath) {
   const links = [
-    {path: '/news', label: 'NEWS'},
     {path: '/', label: 'WORK'},
+    {path: '/news', label: 'NEWS'},
     {path: '/info', label: 'INFO'},
   ]
   const items = links

@@ -37,8 +37,8 @@ export default function Navigation() {
   const [accOpen, setAccOpen] = useState(false)
 
   const links = [
-    { path: '/news', label: 'NEWS' },
     { path: '/', label: 'WORK' },
+    { path: '/news', label: 'NEWS' },
     { path: '/info', label: 'INFO' },
   ]
 
